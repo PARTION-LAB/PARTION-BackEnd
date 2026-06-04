@@ -1,0 +1,17 @@
+<mapper namespace="com.partion.wallet.mapper.WalletMapper">
+
+    <insert id="insert" parameterType="com.partion.wallet.domain.Wallet"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO wallets (
+        member_id,
+        available_balance,
+        locked_balance
+        )
+        VALUES (
+        #{memberId},
+        #{availableBalance},
+        #{lockedBalance}
+        )
+    </insert>
+
+</mapper>

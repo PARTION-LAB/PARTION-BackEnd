@@ -1,0 +1,39 @@
+<mapper namespace="com.partion.member.mapper.MemberMapper">
+
+    <select id="existsByEmail" parameterType="string" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1
+        FROM members
+        WHERE email = #{email}
+        )
+    </select>
+
+    <select id="existsByNickname" parameterType="string" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1
+        FROM members
+        WHERE nickname = #{nickname}
+        )
+    </select>
+
+    <insert id="insert" parameterType="com.partion.member.domain.Member"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO members (
+        email,
+        password,
+        nickname,
+        provider,
+        provider_id,
+        role
+        )
+        VALUES (
+        #{email},
+        #{password},
+        #{nickname},
+        #{provider},
+        #{providerId},
+        #{role}
+        )
+    </insert>
+
+</mapper>
