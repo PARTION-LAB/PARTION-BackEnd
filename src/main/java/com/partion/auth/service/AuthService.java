@@ -1,7 +1,10 @@
 package com.partion.auth.service;
 
+import com.partion.auth.dto.LoginRequest;
 import com.partion.auth.dto.SignupRequest;
 import com.partion.auth.dto.SignupResponse;
+import com.partion.auth.dto.TokenResponse;
+import com.partion.global.security.JwtTokenProvider;
 import com.partion.member.domain.Member;
 import com.partion.member.mapper.MemberMapper;
 import com.partion.wallet.domain.Wallet;
@@ -9,11 +12,13 @@ import com.partion.wallet.mapper.WalletMapper;
 import com.partion.global.exception.BusinessException;
 import com.partion.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 
 @RequiredArgsConstructor
 @Service
@@ -22,6 +27,8 @@ public class AuthService {
     private final MemberMapper memberMapper;
     private final WalletMapper walletMapper;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final StringRedisTemplate stringRedisTemplate;
 
     public SignupResponse signup(SignupRequest request) {
         if(memberMapper.existsByEmail(request.getEmail())) {
@@ -56,6 +63,35 @@ public class AuthService {
                 member.getId(),
                 member.getEmail(),
                 member.getNickname()
+        );
+    }
+
+    public TokenResponse login(LoginRequest request) {
+        Member member = memberMapper.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LOGIN_REQUEST));
+
+        if(!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_LOGIN_REQUEST);
+        }
+
+        String accessToken = jwtTokenProvider.createAccessToken(member);
+        String refreshToken = jwtTokenProvider.createRefreshToken(member);
+
+        // Redis에 Refresh Token 저장
+        // key -> refresh: {memberId}
+        // value -> refreshToken 문자열
+        // TTL -> jwt.refresh-token-expiration
+        stringRedisTemplate.opsForValue().set(
+                "refresh:" + member.getId(),
+                refreshToken,
+                Duration.ofMillis(jwtTokenProvider.getRefreshTokenExpirationMillis())
+        );
+
+        return new TokenResponse(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                jwtTokenProvider.getAccessTokenExpirationSeconds()
         );
     }
 }
