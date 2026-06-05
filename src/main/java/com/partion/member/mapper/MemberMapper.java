@@ -11,4 +11,5 @@ public interface MemberMapper {
     boolean existsByNickname(String nickname);
     void insert(Member member);
     Optional<Member> findByEmail(String email);
+    Optional<Member> findById(Long id);
 }

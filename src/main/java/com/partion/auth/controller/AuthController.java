@@ -1,9 +1,6 @@
 package com.partion.auth.controller;
 
-import com.partion.auth.dto.LoginRequest;
-import com.partion.auth.dto.SignupRequest;
-import com.partion.auth.dto.SignupResponse;
-import com.partion.auth.dto.TokenResponse;
+import com.partion.auth.dto.*;
 import com.partion.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +27,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
         TokenResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reissue")
+    public ResponseEntity<AccessTokenResponse> reissue(@Valid @RequestBody ReissueRequest request) {
+        AccessTokenResponse response = authService.reissue(request);
         return ResponseEntity.ok(response);
     }
 }
