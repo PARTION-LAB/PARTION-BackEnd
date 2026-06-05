@@ -1,6 +1,11 @@
 package com.partion.global.security;
 
+import com.partion.global.exception.BusinessException;
+import com.partion.global.exception.ErrorCode;
 import com.partion.member.domain.Member;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwt;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
@@ -50,4 +55,44 @@ public class JwtTokenProvider {
         return jwtProperties.getRefreshTokenExpiration();
     }
 
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(getSecretKey())
+                    .build()
+                    .parseSignedClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException exception) {
+            return false;
+        }
+    }
+
+    public Long getMemberId(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(getSecretKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            return Long.valueOf(claims.getSubject());
+        } catch (JwtException | IllegalArgumentException exception) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+    }
+
+    public long getRemainingExpiration(String token) {
+        try {
+            Date expiration = Jwts.parser()
+                    .verifyWith(getSecretKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getExpiration();
+
+            long now = System.currentTimeMillis();
+            return expiration.getTime() - now;
+        } catch (JwtException | IllegalArgumentException exception) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+    }
 }

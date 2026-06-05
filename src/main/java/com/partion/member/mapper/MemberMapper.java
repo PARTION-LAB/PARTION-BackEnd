@@ -2,6 +2,7 @@ package com.partion.member.mapper;
 
 import com.partion.member.domain.Member;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.Optional;
 
@@ -11,4 +12,9 @@ public interface MemberMapper {
     boolean existsByNickname(String nickname);
     void insert(Member member);
     Optional<Member> findByEmail(String email);
+    Optional<Member> findById(Long id);
+    int updateNickname(
+            @Param("id") Long id,
+            @Param("nickname") String nickname
+    );
 }

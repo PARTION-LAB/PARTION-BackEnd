@@ -1,9 +1,6 @@
 package com.partion.auth.service;
 
-import com.partion.auth.dto.LoginRequest;
-import com.partion.auth.dto.SignupRequest;
-import com.partion.auth.dto.SignupResponse;
-import com.partion.auth.dto.TokenResponse;
+import com.partion.auth.dto.*;
 import com.partion.global.security.JwtTokenProvider;
 import com.partion.member.domain.Member;
 import com.partion.member.mapper.MemberMapper;
@@ -19,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 @Service
@@ -93,5 +91,58 @@ public class AuthService {
                 "Bearer",
                 jwtTokenProvider.getAccessTokenExpirationSeconds()
         );
+    }
+
+    public AccessTokenResponse reissue(ReissueRequest request) {
+        String refreshToken = request.getRefreshToken();
+
+        if(!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+
+        String savedRefreshToken = stringRedisTemplate.opsForValue().get("refresh:" + memberId);
+
+        if(savedRefreshToken == null) {
+            throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        if(!savedRefreshToken.equals(refreshToken)) {
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_MISMATCH);
+        }
+
+        Member member = memberMapper.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        String newAccessToken = jwtTokenProvider.createAccessToken(member);
+
+        return new AccessTokenResponse(
+                newAccessToken,
+                "Bearer",
+                jwtTokenProvider.getAccessTokenExpirationSeconds()
+        );
+    }
+
+    @Transactional
+    public void logout(String accessToken) {
+        if(!jwtTokenProvider.validateToken(accessToken)) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        Long memberId = jwtTokenProvider.getMemberId(accessToken);
+
+        stringRedisTemplate.delete("refresh:" + memberId);
+
+        long remainingExpiration = jwtTokenProvider.getRemainingExpiration(accessToken);
+
+        if(remainingExpiration > 0) {
+            stringRedisTemplate.opsForValue().set(
+                    "blacklist:" + accessToken,
+                    "logout",
+                    remainingExpiration,
+                    TimeUnit.MILLISECONDS
+            );
+        }
     }
 }
