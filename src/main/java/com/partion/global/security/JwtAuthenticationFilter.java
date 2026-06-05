@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService customUserDetailsService;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     protected void doFilterInternal(
@@ -31,6 +33,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         String token = resolveToken(request);
+
+        if (token != null && isBlacklisted(token)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (token != null && jwtTokenProvider.validateToken(token)) {
             Long memberId = jwtTokenProvider.getMemberId(token);
@@ -57,5 +64,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+
+    private boolean isBlacklisted(String token) {
+        return Boolean.TRUE.equals(
+                stringRedisTemplate.hasKey("blacklist:" + token)
+        );
     }
 }

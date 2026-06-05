@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 @Service
@@ -121,5 +122,27 @@ public class AuthService {
                 "Bearer",
                 jwtTokenProvider.getAccessTokenExpirationSeconds()
         );
+    }
+
+    @Transactional
+    public void logout(String accessToken) {
+        if(!jwtTokenProvider.validateToken(accessToken)) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        Long memberId = jwtTokenProvider.getMemberId(accessToken);
+
+        stringRedisTemplate.delete("refresh:" + memberId);
+
+        long remainingExpiration = jwtTokenProvider.getRemainingExpiration(accessToken);
+
+        if(remainingExpiration > 0) {
+            stringRedisTemplate.opsForValue().set(
+                    "blacklist:" + accessToken,
+                    "logout",
+                    remainingExpiration,
+                    TimeUnit.MILLISECONDS
+            );
+        }
     }
 }
