@@ -3,10 +3,12 @@ package com.partion.member.service;
 import com.partion.global.exception.BusinessException;
 import com.partion.global.exception.ErrorCode;
 import com.partion.member.domain.Member;
+import com.partion.member.dto.ChangePasswordRequest;
 import com.partion.member.dto.MemberInfoResponse;
 import com.partion.member.dto.UpdateMemberRequest;
 import com.partion.member.mapper.MemberMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
 
     private final MemberMapper memberMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public MemberInfoResponse getMyInfo(Long memberId) {
         Member member = memberMapper.findById(memberId)
@@ -40,5 +43,19 @@ public class MemberService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
         return new MemberInfoResponse(updatedMember);
+    }
+
+    @Transactional
+    public void changePassword(Long memberId, ChangePasswordRequest request) {
+        Member member = memberMapper.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), member.getPassword())) {
+            throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
+        }
+
+        String encodedNewPassword = passwordEncoder.encode(request.getNewPassword());
+
+        memberMapper.updatePassword(memberId, encodedNewPassword);
     }
 }
