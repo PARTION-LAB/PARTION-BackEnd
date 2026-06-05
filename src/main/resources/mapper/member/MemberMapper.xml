@@ -70,4 +70,11 @@
         WHERE id = #{id}
     </select>
 
+    <update id="updateNickname">
+        UPDATE members
+        SET
+        nickname = #{nickname}
+        WHERE id = #{id}
+    </update>
+
 </mapper>
