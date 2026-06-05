@@ -75,7 +75,7 @@ public class JwtTokenProvider {
                     .getPayload();
             return Long.valueOf(claims.getSubject());
         } catch (JwtException | IllegalArgumentException exception) {
-            throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
     }
 }
