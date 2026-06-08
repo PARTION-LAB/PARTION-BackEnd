@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.partion.product.mapper.ProductMapper">
+
+    <insert id="insert" parameterType="com.partion.product.domain.Product"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO products (
+        issuer_member_id,
+        category,
+        name,
+        summary,
+        description,
+        image_url,
+        extra_info,
+        target_amount,
+        current_amount,
+        token_price,
+        total_token_quantity,
+        funded_token_quantity,
+        expected_yield,
+        deadline,
+        status
+        )
+        VALUES (
+        #{issuerMemberId},
+        #{category},
+        #{name},
+        #{summary},
+        #{description},
+        #{imageUrl},
+        #{extraInfo},
+        #{targetAmount},
+        #{currentAmount},
+        #{tokenPrice},
+        #{totalTokenQuantity},
+        #{fundedTokenQuantity},
+        #{expectedYield},
+        #{deadline},
+        #{status}
+        )
+    </insert>
+
+</mapper>
