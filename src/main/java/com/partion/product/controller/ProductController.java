@@ -1,8 +1,10 @@
 package com.partion.product.controller;
 
+import com.partion.global.response.PageResponse;
 import com.partion.global.security.CustomUserDetails;
 import com.partion.product.dto.CreateProductRequest;
 import com.partion.product.dto.ProductCreateResponse;
+import com.partion.product.dto.ProductListResponse;
 import com.partion.product.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +29,18 @@ public class ProductController {
                 productService.createProduct(userDetails.getMemberId(), request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<PageResponse<ProductListResponse>> getProducts(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PageResponse<ProductListResponse> response =
+                productService.getProducts(category, keyword, page, size);
+
+        return ResponseEntity.ok(response);
     }
 }

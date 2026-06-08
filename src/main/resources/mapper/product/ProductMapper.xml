@@ -42,4 +42,51 @@
         )
     </insert>
 
+    <select id="findAll" resultType="com.partion.product.domain.Product">
+        SELECT
+        id,
+        issuer_member_id,
+        category,
+        name,
+        summary,
+        description,
+        image_url,
+        extra_info,
+        target_amount,
+        current_amount,
+        token_price,
+        total_token_quantity,
+        funded_token_quantity,
+        expected_yield,
+        deadline,
+        status,
+        created_at,
+        updated_at
+        FROM products
+        <where>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*)
+        FROM products
+        <where>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+    </select>
+
 </mapper>

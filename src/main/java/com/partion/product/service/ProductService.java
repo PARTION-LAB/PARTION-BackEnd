@@ -2,9 +2,11 @@ package com.partion.product.service;
 
 import com.partion.global.exception.BusinessException;
 import com.partion.global.exception.ErrorCode;
+import com.partion.global.response.PageResponse;
 import com.partion.product.domain.Product;
 import com.partion.product.dto.CreateProductRequest;
 import com.partion.product.dto.ProductCreateResponse;
+import com.partion.product.dto.ProductListResponse;
 import com.partion.product.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -73,5 +76,32 @@ public class ProductService {
         }
 
         return divideAndRemainder[0].longValueExact();
+    }
+
+    public PageResponse<ProductListResponse> getProducts(
+            String category,
+            String keyword,
+            int page,
+            int size
+    ) {
+        validatePageRequest(page, size);
+
+        int offset = page * size;
+
+        List<ProductListResponse> content = productMapper
+                .findAll(category, keyword, size, offset)
+                .stream()
+                .map(ProductListResponse::new)
+                .toList();
+
+        long totalElements = productMapper.countAll(category, keyword);
+
+        return new PageResponse<>(content, page, size, totalElements);
+    }
+
+    private void validatePageRequest(int page, int size) {
+        if (page < 0 || size <= 0 || size > 100) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
     }
 }
