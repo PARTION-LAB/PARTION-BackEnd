@@ -45,11 +45,23 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{productId}")
+    @GetMapping("/detail/{productId}")
     public ResponseEntity<ProductDetailResponse> getProductDetail(
             @PathVariable Long productId
     ) {
         ProductDetailResponse response = productService.getProductDetail(productId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<PageResponse<ProductListResponse>> getMyProducts(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PageResponse<ProductListResponse> response =
+                productService.getMyProducts(userDetails.getMemberId(), page, size);
+
         return ResponseEntity.ok(response);
     }
 }

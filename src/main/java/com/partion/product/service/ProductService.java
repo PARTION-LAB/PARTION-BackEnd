@@ -112,4 +112,24 @@ public class ProductService {
 
         return new ProductDetailResponse(product);
     }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ProductListResponse> getMyProducts(Long memberId, int page, int size) {
+        validatePageRequest(page, size);
+
+        int offset = page * size;
+
+        List<ProductListResponse> content = productMapper.findAllByIssuer(
+                        memberId,
+                        size,
+                        offset
+                )
+                .stream()
+                .map(ProductListResponse::new)
+                .toList();
+
+        long totalElements = productMapper.countAllByIssuer(memberId);
+
+        return new PageResponse<>(content, page, size, totalElements);
+    }
 }

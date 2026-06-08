@@ -25,4 +25,12 @@ public interface ProductMapper {
     );
 
     Optional<Product> findById(@Param("id") Long id);
+
+    List<Product> findAllByIssuer(
+            @Param("issuerMemberId") Long issuerMemberId,
+            @Param("limit") int limit,
+            @Param("offset") int offset
+    );
+
+    long countAllByIssuer(@Param("issuerMemberId") Long issuerMemberId);
 }
