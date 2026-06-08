@@ -2,9 +2,7 @@ package com.partion.payment.controller;
 
 import com.partion.global.response.PageResponse;
 import com.partion.global.security.CustomUserDetails;
-import com.partion.payment.dto.DepositHistoryResponse;
-import com.partion.payment.dto.DepositReadyRequest;
-import com.partion.payment.dto.DepositReadyResponse;
+import com.partion.payment.dto.*;
 import com.partion.payment.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,5 +43,16 @@ public class PaymentController {
                 paymentService.readyDeposit(userDetails.getMemberId(), request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/deposits/confirm")
+    public ResponseEntity<DepositConfirmResponse> confirmDeposit(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody DepositConfirmRequest request
+    ) {
+        DepositConfirmResponse response =
+                paymentService.confirmDeposit(userDetails.getMemberId(), request);
+
+        return ResponseEntity.ok(response);
     }
 }

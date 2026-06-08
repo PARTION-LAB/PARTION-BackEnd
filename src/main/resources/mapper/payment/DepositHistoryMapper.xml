@@ -46,4 +46,29 @@
         )
     </insert>
 
+    <select id="findByOrderId" resultType="com.partion.payment.domain.DepositHistory">
+        SELECT
+        id,
+        member_id,
+        wallet_id,
+        payment_key,
+        order_id,
+        amount,
+        status,
+        requested_at,
+        approved_at
+        FROM deposit_histories
+        WHERE order_id = #{orderId}
+    </select>
+
+    <update id="updateDone">
+        UPDATE deposit_histories
+        SET
+        payment_key = #{paymentKey},
+        status = 'DONE',
+        approved_at = #{approvedAt}
+        WHERE id = #{id}
+        AND status = 'REQUESTED'
+    </update>
+
 </mapper>

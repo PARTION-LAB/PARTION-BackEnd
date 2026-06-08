@@ -16,4 +16,5 @@ public interface WalletTransactionMapper {
     );
 
     long countByWalletId(@Param("walletId") Long walletId);
+    void insert(WalletTransaction walletTransaction);
 }
