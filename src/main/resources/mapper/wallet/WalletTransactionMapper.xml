@@ -28,4 +28,26 @@
         WHERE wallet_id = #{walletId}
     </select>
 
+    <insert id="insert" parameterType="com.partion.wallet.domain.WalletTransaction"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO wallet_transactions (
+        wallet_id,
+        type,
+        amount,
+        available_balance_after,
+        locked_balance_after,
+        reference_type,
+        reference_id
+        )
+        VALUES (
+        #{walletId},
+        #{type},
+        #{amount},
+        #{availableBalanceAfter},
+        #{lockedBalanceAfter},
+        #{referenceType},
+        #{referenceId}
+        )
+    </insert>
+
 </mapper>

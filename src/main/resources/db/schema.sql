@@ -67,7 +67,7 @@ CREATE TABLE deposit_histories (
                                    id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                    member_id BIGINT NOT NULL,
                                    wallet_id BIGINT NOT NULL,
-                                   payment_key VARCHAR(255) NOT NULL UNIQUE,
+                                   payment_key VARCHAR(255) UNIQUE,
                                    order_id VARCHAR(255) NOT NULL UNIQUE,
                                    amount DECIMAL(19, 2) NOT NULL,
                                    status VARCHAR(30) NOT NULL,

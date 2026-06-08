@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.partion.payment.mapper.DepositHistoryMapper">
+
+    <select id="findByMemberId" resultType="com.partion.payment.domain.DepositHistory">
+        SELECT
+        id,
+        member_id,
+        wallet_id,
+        payment_key,
+        order_id,
+        amount,
+        status,
+        requested_at,
+        approved_at
+        FROM deposit_histories
+        WHERE member_id = #{memberId}
+        ORDER BY requested_at DESC, id DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countByMemberId" resultType="long">
+        SELECT COUNT(*)
+        FROM deposit_histories
+        WHERE member_id = #{memberId}
+    </select>
+
+    <insert id="insert" parameterType="com.partion.payment.domain.DepositHistory"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO deposit_histories (
+        member_id,
+        wallet_id,
+        order_id,
+        amount,
+        status
+        )
+        VALUES (
+        #{memberId},
+        #{walletId},
+        #{orderId},
+        #{amount},
+        #{status}
+        )
+    </insert>
+
+    <select id="findByOrderId" resultType="com.partion.payment.domain.DepositHistory">
+        SELECT
+        id,
+        member_id,
+        wallet_id,
+        payment_key,
+        order_id,
+        amount,
+        status,
+        requested_at,
+        approved_at
+        FROM deposit_histories
+        WHERE order_id = #{orderId}
+    </select>
+
+    <update id="updateDone">
+        UPDATE deposit_histories
+        SET
+        payment_key = #{paymentKey},
+        status = 'DONE',
+        approved_at = #{approvedAt}
+        WHERE id = #{id}
+        AND status = 'REQUESTED'
+    </update>
+
+</mapper>

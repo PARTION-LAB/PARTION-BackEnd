@@ -23,7 +23,13 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
 
-    WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "지갑을 찾을 수 없습니다.");
+    WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "지갑을 찾을 수 없습니다."),
+    INVALID_DEPOSIT_AMOUNT(HttpStatus.BAD_REQUEST, "충전 금액은 0보다 커야 합니다."),
+
+    DEPOSIT_NOT_FOUND(HttpStatus.NOT_FOUND, "충전 요청을 찾을 수 없습니다."),
+    DEPOSIT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "충전 요청 금액이 일치하지 않습니다."),
+    DEPOSIT_ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리된 충전 요청입니다."),
+    TOSS_PAYMENT_CONFIRM_FAILED(HttpStatus.BAD_REQUEST, "토스 결제 승인에 실패했습니다.");
 
     private final HttpStatus status;
     private final String message;
