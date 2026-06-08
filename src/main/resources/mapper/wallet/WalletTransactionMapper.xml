@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.partion.wallet.mapper.WalletTransactionMapper">
+
+    <select id="findByWalletId" resultType="com.partion.wallet.domain.WalletTransaction">
+        SELECT
+        id,
+        wallet_id,
+        type,
+        amount,
+        available_balance_after,
+        locked_balance_after,
+        reference_type,
+        reference_id,
+        created_at
+        FROM wallet_transactions
+        WHERE wallet_id = #{walletId}
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countByWalletId" resultType="long">
+        SELECT COUNT(*)
+        FROM wallet_transactions
+        WHERE wallet_id = #{walletId}
+    </select>
+
+</mapper>

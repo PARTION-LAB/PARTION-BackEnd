@@ -18,4 +18,16 @@
         )
     </insert>
 
+    <select id="findByMemberId" parameterType="long" resultType="com.partion.wallet.domain.Wallet">
+        SELECT
+        id,
+        member_id,
+        available_balance,
+        locked_balance,
+        created_at,
+        updated_at
+        FROM wallets
+        WHERE member_id = #{memberId}
+    </select>
+
 </mapper>
