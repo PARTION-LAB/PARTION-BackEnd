@@ -6,6 +6,7 @@ import com.partion.global.response.PageResponse;
 import com.partion.product.domain.Product;
 import com.partion.product.dto.CreateProductRequest;
 import com.partion.product.dto.ProductCreateResponse;
+import com.partion.product.dto.ProductDetailResponse;
 import com.partion.product.dto.ProductListResponse;
 import com.partion.product.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
@@ -103,5 +104,12 @@ public class ProductService {
         if (page < 0 || size <= 0 || size > 100) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
+    }
+
+    public ProductDetailResponse getProductDetail(Long productId) {
+        Product product = productMapper.findById(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        return new ProductDetailResponse(product);
     }
 }

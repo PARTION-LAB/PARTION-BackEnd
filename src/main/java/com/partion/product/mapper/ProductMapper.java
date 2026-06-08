@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mapper
 public interface ProductMapper {
@@ -22,4 +23,6 @@ public interface ProductMapper {
             @Param("category") String category,
             @Param("keyword") String keyword
     );
+
+    Optional<Product> findById(@Param("id") Long id);
 }

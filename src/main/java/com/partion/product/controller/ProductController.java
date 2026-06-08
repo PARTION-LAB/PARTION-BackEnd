@@ -4,6 +4,7 @@ import com.partion.global.response.PageResponse;
 import com.partion.global.security.CustomUserDetails;
 import com.partion.product.dto.CreateProductRequest;
 import com.partion.product.dto.ProductCreateResponse;
+import com.partion.product.dto.ProductDetailResponse;
 import com.partion.product.dto.ProductListResponse;
 import com.partion.product.service.ProductService;
 import jakarta.validation.Valid;
@@ -41,6 +42,14 @@ public class ProductController {
         PageResponse<ProductListResponse> response =
                 productService.getProducts(category, keyword, page, size);
 
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{productId}")
+    public ResponseEntity<ProductDetailResponse> getProductDetail(
+            @PathVariable Long productId
+    ) {
+        ProductDetailResponse response = productService.getProductDetail(productId);
         return ResponseEntity.ok(response);
     }
 }

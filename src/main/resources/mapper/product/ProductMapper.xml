@@ -89,4 +89,28 @@
         </where>
     </select>
 
+    <select id="findById" parameterType="long" resultType="com.partion.product.domain.Product">
+        SELECT
+        id,
+        issuer_member_id,
+        category,
+        name,
+        summary,
+        description,
+        image_url,
+        extra_info,
+        target_amount,
+        current_amount,
+        token_price,
+        total_token_quantity,
+        funded_token_quantity,
+        expected_yield,
+        deadline,
+        status,
+        created_at,
+        updated_at
+        FROM products
+        WHERE id = #{id}
+    </select>
+
 </mapper>
