@@ -16,4 +16,5 @@ public interface DepositHistoryMapper {
     );
 
     long countByMemberId(@Param("memberId") Long memberId);
+    void insert(DepositHistory depositHistory);
 }

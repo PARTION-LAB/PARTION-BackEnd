@@ -3,14 +3,15 @@ package com.partion.payment.controller;
 import com.partion.global.response.PageResponse;
 import com.partion.global.security.CustomUserDetails;
 import com.partion.payment.dto.DepositHistoryResponse;
+import com.partion.payment.dto.DepositReadyRequest;
+import com.partion.payment.dto.DepositReadyResponse;
 import com.partion.payment.service.PaymentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
@@ -33,5 +34,16 @@ public class PaymentController {
                 );
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/deposits/ready")
+    public ResponseEntity<DepositReadyResponse> readyDeposit(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody DepositReadyRequest request
+    ) {
+        DepositReadyResponse response =
+                paymentService.readyDeposit(userDetails.getMemberId(), request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

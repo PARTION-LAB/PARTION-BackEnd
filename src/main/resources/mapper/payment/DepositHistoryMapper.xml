@@ -28,4 +28,22 @@
         WHERE member_id = #{memberId}
     </select>
 
+    <insert id="insert" parameterType="com.partion.payment.domain.DepositHistory"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO deposit_histories (
+        member_id,
+        wallet_id,
+        order_id,
+        amount,
+        status
+        )
+        VALUES (
+        #{memberId},
+        #{walletId},
+        #{orderId},
+        #{amount},
+        #{status}
+        )
+    </insert>
+
 </mapper>
