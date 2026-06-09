@@ -23,4 +23,28 @@
         )
     </insert>
 
+    <select id="findMyInvestments" resultType="com.partion.investment.dto.MyInvestmentResponse">
+        SELECT
+        i.id AS investment_id,
+        i.product_id,
+        p.name AS product_name,
+        p.category,
+        i.quantity,
+        i.price_per_token,
+        i.total_amount,
+        i.created_at
+        FROM investments i
+        JOIN products p ON i.product_id = p.id
+        WHERE i.member_id = #{memberId}
+        ORDER BY i.created_at DESC, i.id DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countMyInvestments" resultType="long">
+        SELECT COUNT(*)
+        FROM investments
+        WHERE member_id = #{memberId}
+    </select>
+
 </mapper>

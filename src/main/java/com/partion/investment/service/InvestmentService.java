@@ -6,6 +6,7 @@ import com.partion.global.response.PageResponse;
 import com.partion.investment.domain.Investment;
 import com.partion.investment.dto.CreateInvestmentRequest;
 import com.partion.investment.dto.InvestmentCreateResponse;
+import com.partion.investment.dto.MyInvestmentResponse;
 import com.partion.investment.mapper.InvestmentMapper;
 import com.partion.portfolio.domain.Holding;
 import com.partion.portfolio.mapper.HoldingMapper;
@@ -231,5 +232,18 @@ public class InvestmentService {
                 .build();
 
         holdingMapper.update(updatedHolding);
+    }
+
+    public PageResponse<MyInvestmentResponse> getMyInvestments(Long memberId, int page, int size) {
+        validatePageRequest(page, size);
+
+        int offset = page * size;
+
+        List<MyInvestmentResponse> content =
+                investmentMapper.findMyInvestments(memberId, size, offset);
+
+        long totalElements = investmentMapper.countMyInvestments(memberId);
+
+        return new PageResponse<>(content, page, size, totalElements);
     }
 }

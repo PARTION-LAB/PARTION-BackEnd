@@ -4,6 +4,7 @@ import com.partion.global.response.PageResponse;
 import com.partion.global.security.CustomUserDetails;
 import com.partion.investment.dto.CreateInvestmentRequest;
 import com.partion.investment.dto.InvestmentCreateResponse;
+import com.partion.investment.dto.MyInvestmentResponse;
 import com.partion.investment.service.InvestmentService;
 import com.partion.product.dto.ProductDetailResponse;
 import com.partion.product.dto.ProductListResponse;
@@ -53,5 +54,17 @@ public class InvestmentController {
                 investmentService.invest(userDetails.getMemberId(), request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<PageResponse<MyInvestmentResponse>> getMyInvestments(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PageResponse<MyInvestmentResponse> response =
+                investmentService.getMyInvestments(userDetails.getMemberId(), page, size);
+
+        return ResponseEntity.ok(response);
     }
 }
