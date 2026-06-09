@@ -63,4 +63,16 @@ public class CommentService {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
     }
+
+    @Transactional
+    public void deleteComment(Long memberId, Long commentId) {
+        Comment comment = commentMapper.findById(commentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+
+        if (!comment.getMemberId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.COMMENT_ACCESS_DENIED);
+        }
+
+        commentMapper.deleteById(commentId);
+    }
 }

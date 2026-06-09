@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mapper
 public interface CommentMapper {
@@ -18,4 +19,8 @@ public interface CommentMapper {
     );
 
     long countByBoardId(@Param("boardId") Long boardId);
+
+    Optional<Comment> findById(@Param("id") Long id);
+
+    void deleteById(@Param("id") Long id);
 }

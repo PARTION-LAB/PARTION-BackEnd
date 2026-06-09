@@ -40,4 +40,21 @@
         WHERE board_id = #{boardId}
     </select>
 
+    <select id="findById" resultType="com.partion.comment.domain.Comment">
+        SELECT
+        id,
+        board_id,
+        member_id,
+        content,
+        created_at,
+        updated_at
+        FROM comments
+        WHERE id = #{id}
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM comments
+        WHERE id = #{id}
+    </delete>
+
 </mapper>
