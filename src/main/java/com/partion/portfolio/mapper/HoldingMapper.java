@@ -1,9 +1,11 @@
 package com.partion.portfolio.mapper;
 
 import com.partion.portfolio.domain.Holding;
+import com.partion.portfolio.dto.HoldingResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 @Mapper
@@ -17,4 +19,12 @@ public interface HoldingMapper {
     void insert(Holding holding);
 
     void update(Holding holding);
+
+    List<HoldingResponse> findMyHoldings(
+            @Param("memberId") Long memberId,
+            @Param("limit") int limit,
+            @Param("offset") int offset
+    );
+
+    long countMyHoldings(@Param("memberId") Long memberId);
 }

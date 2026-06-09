@@ -48,4 +48,36 @@
         WHERE id = #{id}
     </update>
 
+    <select id="findMyHoldings" resultType="com.partion.portfolio.dto.HoldingResponse">
+        SELECT
+        h.id AS holding_id,
+        h.product_id,
+        p.category,
+        p.name AS product_name,
+        h.quantity,
+        h.locked_quantity,
+        (h.quantity - h.locked_quantity) AS available_quantity,
+        h.average_price,
+        p.token_price AS current_price,
+        (h.quantity * p.token_price) AS valuation_amount,
+        ((h.quantity * p.token_price) * IFNULL(p.expected_yield, 0) / 100) AS expected_annual_dividend,
+        p.expected_yield,
+        CASE
+        WHEN h.average_price = 0 THEN 0
+        ELSE ((p.token_price - h.average_price) / h.average_price * 100)
+        END AS profit_rate
+        FROM holdings h
+        JOIN products p ON h.product_id = p.id
+        WHERE h.member_id = #{memberId}
+        ORDER BY h.updated_at DESC, h.id DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countMyHoldings" resultType="long">
+        SELECT COUNT(*)
+        FROM holdings
+        WHERE member_id = #{memberId}
+    </select>
+
 </mapper>
