@@ -2,8 +2,10 @@ package com.partion.order.service;
 
 import com.partion.global.exception.BusinessException;
 import com.partion.global.exception.ErrorCode;
+import com.partion.global.response.PageResponse;
 import com.partion.order.domain.Order;
 import com.partion.order.dto.CreateOrderRequest;
+import com.partion.order.dto.MyOrderResponse;
 import com.partion.order.dto.OrderCreateResponse;
 import com.partion.order.mapper.OrderMapper;
 import com.partion.portfolio.domain.Holding;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -150,5 +153,31 @@ public class OrderService {
                 .build();
 
         holdingMapper.updateLockedQuantity(updatedHolding);
+    }
+
+    public PageResponse<MyOrderResponse> getMyOrders(
+            Long memberId,
+            String type,
+            String status,
+            int page,
+            int size
+    ) {
+        validatePageRequest(page, size);
+
+        int offset = page * size;
+
+        List<MyOrderResponse> content =
+                orderMapper.findMyOrders(memberId, type, status, size, offset);
+
+        long totalElements =
+                orderMapper.countMyOrders(memberId, type, status);
+
+        return new PageResponse<>(content, page, size, totalElements);
+    }
+
+    private void validatePageRequest(int page, int size) {
+        if (page < 0 || size <= 0 || size > 100) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
     }
 }

@@ -1,7 +1,9 @@
 package com.partion.order.controller;
 
+import com.partion.global.response.PageResponse;
 import com.partion.global.security.CustomUserDetails;
 import com.partion.order.dto.CreateOrderRequest;
+import com.partion.order.dto.MyOrderResponse;
 import com.partion.order.dto.OrderCreateResponse;
 import com.partion.order.service.OrderService;
 import jakarta.validation.Valid;
@@ -27,5 +29,25 @@ public class OrderController {
                 orderService.createOrder(userDetails.getMemberId(), request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<PageResponse<MyOrderResponse>> getMyOrders(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PageResponse<MyOrderResponse> response =
+                orderService.getMyOrders(
+                        userDetails.getMemberId(),
+                        type,
+                        status,
+                        page,
+                        size
+                );
+
+        return ResponseEntity.ok(response);
     }
 }
