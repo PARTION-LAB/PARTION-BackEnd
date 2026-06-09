@@ -5,6 +5,7 @@ import com.partion.portfolio.dto.HoldingResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,4 +28,8 @@ public interface HoldingMapper {
     );
 
     long countMyHoldings(@Param("memberId") Long memberId);
+
+    BigDecimal sumTokenValuationAmount(@Param("memberId") Long memberId);
+
+    BigDecimal sumExpectedAnnualDividend(@Param("memberId") Long memberId);
 }

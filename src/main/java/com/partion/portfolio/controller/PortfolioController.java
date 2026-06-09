@@ -3,6 +3,7 @@ package com.partion.portfolio.controller;
 import com.partion.global.response.PageResponse;
 import com.partion.global.security.CustomUserDetails;
 import com.partion.portfolio.dto.HoldingResponse;
+import com.partion.portfolio.dto.PortfolioSummaryResponse;
 import com.partion.portfolio.service.PortfolioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,16 @@ public class PortfolioController {
     ) {
         PageResponse<HoldingResponse> response =
                 portfolioService.getMyHoldings(userDetails.getMemberId(), page, size);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<PortfolioSummaryResponse> getSummary(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        PortfolioSummaryResponse response =
+                portfolioService.getSummary(userDetails.getMemberId());
 
         return ResponseEntity.ok(response);
     }

@@ -80,4 +80,18 @@
         WHERE member_id = #{memberId}
     </select>
 
+    <select id="sumTokenValuationAmount" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(h.quantity * p.token_price), 0)
+        FROM holdings h
+        JOIN products p ON h.product_id = p.id
+        WHERE h.member_id = #{memberId}
+    </select>
+
+    <select id="sumExpectedAnnualDividend" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM((h.quantity * p.token_price) * IFNULL(p.expected_yield, 0) / 100), 0)
+        FROM holdings h
+        JOIN products p ON h.product_id = p.id
+        WHERE h.member_id = #{memberId}
+    </select>
+
 </mapper>
