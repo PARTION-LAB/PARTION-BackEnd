@@ -36,7 +36,12 @@ public enum ErrorCode {
     INVALID_PRODUCT_AMOUNT(HttpStatus.BAD_REQUEST, "상품 금액 정보가 올바르지 않습니다."),
     INVALID_PRODUCT_DEADLINE(HttpStatus.BAD_REQUEST, "모집 마감일은 오늘 이후여야 합니다."),
     INVALID_PRODUCT_TOKEN_QUANTITY(HttpStatus.BAD_REQUEST, "목표 금액은 토큰 단가로 나누어 떨어져야 합니다."),
-    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다.");
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."),
+
+    BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."),
+    BOARD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "게시글에 대한 권한이 없습니다."),
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
+    COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "댓글에 대한 권한이 없습니다.");
 
     private final HttpStatus status;
     private final String message;

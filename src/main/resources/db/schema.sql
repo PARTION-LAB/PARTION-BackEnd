@@ -209,7 +209,8 @@ CREATE TABLE comments (
                           updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
                           CONSTRAINT fk_comment_board
-                              FOREIGN KEY (board_id) REFERENCES boards(id),
+                              FOREIGN KEY (board_id) REFERENCES boards(id)
+                                  ON DELETE CASCADE,
 
                           CONSTRAINT fk_comment_member
                               FOREIGN KEY (member_id) REFERENCES members(id)

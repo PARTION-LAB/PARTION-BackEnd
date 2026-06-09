@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.partion.board.mapper.BoardMapper">
+
+    <insert id="insert" parameterType="com.partion.board.domain.Board"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO boards (
+        member_id,
+        category,
+        title,
+        content
+        )
+        VALUES (
+        #{memberId},
+        #{category},
+        #{title},
+        #{content}
+        )
+    </insert>
+
+    <select id="findAll" resultType="com.partion.board.domain.Board">
+        SELECT
+        id,
+        member_id,
+        category,
+        title,
+        content,
+        created_at,
+        updated_at
+        FROM boards
+        <where>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+        </where>
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*)
+        FROM boards
+        <where>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+        </where>
+    </select>
+
+    <select id="findById" resultType="com.partion.board.domain.Board">
+        SELECT
+        id,
+        member_id,
+        category,
+        title,
+        content,
+        created_at,
+        updated_at
+        FROM boards
+        WHERE id = #{id}
+    </select>
+
+    <update id="update" parameterType="com.partion.board.domain.Board">
+        UPDATE boards
+        SET
+        category = #{category},
+        title = #{title},
+        content = #{content}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM boards
+        WHERE id = #{id}
+    </delete>
+
+</mapper>
