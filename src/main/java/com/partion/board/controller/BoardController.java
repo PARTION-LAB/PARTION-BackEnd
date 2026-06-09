@@ -1,8 +1,10 @@
 package com.partion.board.controller;
 
 import com.partion.board.dto.BoardCreateResponse;
+import com.partion.board.dto.BoardListResponse;
 import com.partion.board.dto.CreateBoardRequest;
 import com.partion.board.service.BoardService;
+import com.partion.global.response.PageResponse;
 import com.partion.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +29,17 @@ public class BoardController {
                 boardService.createBoard(userDetails.getMemberId(), request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<PageResponse<BoardListResponse>> getBoards(
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PageResponse<BoardListResponse> response =
+                boardService.getBoards(category, page, size);
+
+        return ResponseEntity.ok(response);
     }
 }

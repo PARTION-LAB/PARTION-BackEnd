@@ -2,11 +2,17 @@ package com.partion.board.service;
 
 import com.partion.board.domain.Board;
 import com.partion.board.dto.BoardCreateResponse;
+import com.partion.board.dto.BoardListResponse;
 import com.partion.board.dto.CreateBoardRequest;
 import com.partion.board.mapper.BoardMapper;
+import com.partion.global.exception.BusinessException;
+import com.partion.global.exception.ErrorCode;
+import com.partion.global.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -27,5 +33,27 @@ public class BoardService {
         boardMapper.insert(board);
 
         return new BoardCreateResponse(board);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<BoardListResponse> getBoards(String category, int page, int size) {
+        validatePageRequest(page, size);
+
+        int offset = page * size;
+
+        List<BoardListResponse> content = boardMapper.findAll(category, size, offset)
+                .stream()
+                .map(BoardListResponse::new)
+                .toList();
+
+        long totalElements = boardMapper.countAll(category);
+
+        return new PageResponse<>(content, page, size, totalElements);
+    }
+
+    private void validatePageRequest(int page, int size) {
+        if (page < 0 || size <= 0 || size > 100) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
     }
 }

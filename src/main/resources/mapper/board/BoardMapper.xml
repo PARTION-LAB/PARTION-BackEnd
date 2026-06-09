@@ -21,4 +21,34 @@
         )
     </insert>
 
+    <select id="findAll" resultType="com.partion.board.domain.Board">
+        SELECT
+        id,
+        member_id,
+        category,
+        title,
+        content,
+        created_at,
+        updated_at
+        FROM boards
+        <where>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+        </where>
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*)
+        FROM boards
+        <where>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+        </where>
+    </select>
+
 </mapper>
