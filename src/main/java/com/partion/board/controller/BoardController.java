@@ -1,9 +1,6 @@
 package com.partion.board.controller;
 
-import com.partion.board.dto.BoardCreateResponse;
-import com.partion.board.dto.BoardDetailResponse;
-import com.partion.board.dto.BoardListResponse;
-import com.partion.board.dto.CreateBoardRequest;
+import com.partion.board.dto.*;
 import com.partion.board.service.BoardService;
 import com.partion.global.response.PageResponse;
 import com.partion.global.security.CustomUserDetails;
@@ -49,6 +46,18 @@ public class BoardController {
             @PathVariable Long boardId
     ) {
         BoardDetailResponse response = boardService.getBoardDetail(boardId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{boardId}")
+    public ResponseEntity<BoardUpdateResponse> updateBoard(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long boardId,
+            @Valid @RequestBody UpdateBoardRequest request
+    ) {
+        BoardUpdateResponse response =
+                boardService.updateBoard(userDetails.getMemberId(), boardId, request);
 
         return ResponseEntity.ok(response);
     }

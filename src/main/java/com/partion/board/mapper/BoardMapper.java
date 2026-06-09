@@ -21,4 +21,6 @@ public interface BoardMapper {
     long countAll(@Param("category") String category);
 
     Optional<Board> findById(@Param("id") Long id);
+
+    void update(Board board);
 }

@@ -38,7 +38,8 @@ public enum ErrorCode {
     INVALID_PRODUCT_TOKEN_QUANTITY(HttpStatus.BAD_REQUEST, "목표 금액은 토큰 단가로 나누어 떨어져야 합니다."),
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."),
 
-    BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다.");
+    BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."),
+    BOARD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "게시글에 대한 권한이 없습니다.");
 
     private final HttpStatus status;
     private final String message;

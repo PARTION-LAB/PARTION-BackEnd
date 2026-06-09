@@ -64,4 +64,13 @@
         WHERE id = #{id}
     </select>
 
+    <update id="update" parameterType="com.partion.board.domain.Board">
+        UPDATE boards
+        SET
+        category = #{category},
+        title = #{title},
+        content = #{content}
+        WHERE id = #{id}
+    </update>
+
 </mapper>

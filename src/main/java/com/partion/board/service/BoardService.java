@@ -1,10 +1,7 @@
 package com.partion.board.service;
 
 import com.partion.board.domain.Board;
-import com.partion.board.dto.BoardCreateResponse;
-import com.partion.board.dto.BoardDetailResponse;
-import com.partion.board.dto.BoardListResponse;
-import com.partion.board.dto.CreateBoardRequest;
+import com.partion.board.dto.*;
 import com.partion.board.mapper.BoardMapper;
 import com.partion.global.exception.BusinessException;
 import com.partion.global.exception.ErrorCode;
@@ -64,5 +61,30 @@ public class BoardService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
 
         return new BoardDetailResponse(board);
+    }
+
+    @Transactional
+    public BoardUpdateResponse updateBoard(Long memberId, Long boardId, UpdateBoardRequest request) {
+        Board board = boardMapper.findById(boardId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        if (!board.getMemberId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.BOARD_ACCESS_DENIED);
+        }
+
+        Board updateBoard = Board.builder()
+                .id(boardId)
+                .memberId(memberId)
+                .category(request.getCategory())
+                .title(request.getTitle())
+                .content(request.getContent())
+                .build();
+
+        boardMapper.update(updateBoard);
+
+        Board updatedBoard = boardMapper.findById(boardId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        return new BoardUpdateResponse(updatedBoard);
     }
 }
