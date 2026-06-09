@@ -33,4 +33,18 @@ public interface ProductMapper {
     );
 
     long countAllByIssuer(@Param("issuerMemberId") Long issuerMemberId);
+
+    List<Product> findAllByStatus(
+            @Param("status") String status,
+            @Param("category") String category,
+            @Param("keyword") String keyword,
+            @Param("limit") int limit,
+            @Param("offset") int offset
+    );
+
+    long countAllByStatus(
+            @Param("status") String status,
+            @Param("category") String category,
+            @Param("keyword") String keyword
+    );
 }
