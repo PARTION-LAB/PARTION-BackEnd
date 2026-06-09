@@ -2,6 +2,7 @@ package com.partion.board.service;
 
 import com.partion.board.domain.Board;
 import com.partion.board.dto.BoardCreateResponse;
+import com.partion.board.dto.BoardDetailResponse;
 import com.partion.board.dto.BoardListResponse;
 import com.partion.board.dto.CreateBoardRequest;
 import com.partion.board.mapper.BoardMapper;
@@ -55,5 +56,13 @@ public class BoardService {
         if (page < 0 || size <= 0 || size > 100) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public BoardDetailResponse getBoardDetail(Long boardId) {
+        Board board = boardMapper.findById(boardId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        return new BoardDetailResponse(board);
     }
 }

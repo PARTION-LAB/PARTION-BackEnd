@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mapper
 public interface BoardMapper {
@@ -18,4 +19,6 @@ public interface BoardMapper {
     );
 
     long countAll(@Param("category") String category);
+
+    Optional<Board> findById(@Param("id") Long id);
 }

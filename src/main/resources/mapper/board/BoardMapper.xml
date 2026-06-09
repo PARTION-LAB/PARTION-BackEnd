@@ -51,4 +51,17 @@
         </where>
     </select>
 
+    <select id="findById" resultType="com.partion.board.domain.Board">
+        SELECT
+        id,
+        member_id,
+        category,
+        title,
+        content,
+        created_at,
+        updated_at
+        FROM boards
+        WHERE id = #{id}
+    </select>
+
 </mapper>

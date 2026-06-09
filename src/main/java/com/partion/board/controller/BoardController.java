@@ -1,6 +1,7 @@
 package com.partion.board.controller;
 
 import com.partion.board.dto.BoardCreateResponse;
+import com.partion.board.dto.BoardDetailResponse;
 import com.partion.board.dto.BoardListResponse;
 import com.partion.board.dto.CreateBoardRequest;
 import com.partion.board.service.BoardService;
@@ -39,6 +40,15 @@ public class BoardController {
     ) {
         PageResponse<BoardListResponse> response =
                 boardService.getBoards(category, page, size);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{boardId}")
+    public ResponseEntity<BoardDetailResponse> getBoardDetail(
+            @PathVariable Long boardId
+    ) {
+        BoardDetailResponse response = boardService.getBoardDetail(boardId);
 
         return ResponseEntity.ok(response);
     }
