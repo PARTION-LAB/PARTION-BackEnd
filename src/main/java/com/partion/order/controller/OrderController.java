@@ -50,4 +50,14 @@ public class OrderController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<Void> cancelOrder(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long orderId
+    ) {
+        orderService.cancelOrder(userDetails.getMemberId(), orderId);
+
+        return ResponseEntity.noContent().build();
+    }
 }

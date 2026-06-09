@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mapper
 public interface OrderMapper {
@@ -25,4 +26,8 @@ public interface OrderMapper {
             @Param("type") String type,
             @Param("status") String status
     );
+
+    Optional<Order> findByIdForUpdate(@Param("id") Long id);
+
+    void updateStatus(Order order);
 }
