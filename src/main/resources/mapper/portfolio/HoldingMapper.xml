@@ -94,4 +94,10 @@
         WHERE h.member_id = #{memberId}
     </select>
 
+    <update id="updateLockedQuantity" parameterType="com.partion.portfolio.domain.Holding">
+        UPDATE holdings
+        SET locked_quantity = #{lockedQuantity}
+        WHERE id = #{id}
+    </update>
+
 </mapper>

@@ -44,6 +44,17 @@ public enum ErrorCode {
     PRODUCT_TOKEN_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "남은 모집 토큰 수량이 부족합니다."),
     INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "예치금 잔액이 부족합니다."),
 
+    PRODUCT_NOT_TRADING(HttpStatus.BAD_REQUEST, "거래 가능한 상품이 아닙니다."),
+    INVALID_ORDER_QUANTITY(HttpStatus.BAD_REQUEST, "주문 수량은 0보다 커야 합니다."),
+    INVALID_ORDER_PRICE(HttpStatus.BAD_REQUEST, "주문 가격은 0보다 커야 합니다."),
+    INVALID_ORDER_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 주문 유형입니다."),
+    INVALID_ORDER_METHOD(HttpStatus.BAD_REQUEST, "지원하지 않는 주문 방식입니다."),
+    INSUFFICIENT_HOLDING_QUANTITY(HttpStatus.BAD_REQUEST, "보유 수량이 부족합니다."),
+
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
+    ORDER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "주문에 대한 권한이 없습니다."),
+    ORDER_NOT_CANCELABLE(HttpStatus.BAD_REQUEST, "취소할 수 없는 주문입니다."),
+
     BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."),
     BOARD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "게시글에 대한 권한이 없습니다."),
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
