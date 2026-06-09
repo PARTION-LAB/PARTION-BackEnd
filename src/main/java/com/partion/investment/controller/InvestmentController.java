@@ -2,6 +2,7 @@ package com.partion.investment.controller;
 
 import com.partion.global.response.PageResponse;
 import com.partion.investment.service.InvestmentService;
+import com.partion.product.dto.ProductDetailResponse;
 import com.partion.product.dto.ProductListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,16 @@ public class InvestmentController {
     ) {
         PageResponse<ProductListResponse> response =
                 investmentService.getFundingProducts(category, keyword, page, size);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/products/{productId}")
+    public ResponseEntity<ProductDetailResponse> getFundingProductDetail(
+            @PathVariable Long productId
+    ) {
+        ProductDetailResponse response =
+                investmentService.getFundingProductDetail(productId);
 
         return ResponseEntity.ok(response);
     }

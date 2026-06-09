@@ -3,6 +3,8 @@ package com.partion.investment.service;
 import com.partion.global.exception.BusinessException;
 import com.partion.global.exception.ErrorCode;
 import com.partion.global.response.PageResponse;
+import com.partion.product.domain.Product;
+import com.partion.product.dto.ProductDetailResponse;
 import com.partion.product.dto.ProductListResponse;
 import com.partion.product.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
@@ -45,5 +47,16 @@ public class InvestmentService {
         if (page < 0 || size <= 0 || size > 100) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
+    }
+
+    public ProductDetailResponse getFundingProductDetail(Long productId) {
+        Product product = productMapper.findById(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        if (!FUNDING_STATUS.equals(product.getStatus())) {
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FUNDING);
+        }
+
+        return new ProductDetailResponse(product);
     }
 }
