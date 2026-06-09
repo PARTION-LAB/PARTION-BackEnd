@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.partion.portfolio.mapper.HoldingMapper">
+
+    <select id="findByMemberIdAndProductIdForUpdate"
+            resultType="com.partion.portfolio.domain.Holding">
+        SELECT
+        id,
+        member_id,
+        product_id,
+        quantity,
+        locked_quantity,
+        average_price,
+        updated_at
+        FROM holdings
+        WHERE member_id = #{memberId}
+        AND product_id = #{productId}
+        FOR UPDATE
+    </select>
+
+    <insert id="insert" parameterType="com.partion.portfolio.domain.Holding"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO holdings (
+        member_id,
+        product_id,
+        quantity,
+        locked_quantity,
+        average_price
+        )
+        VALUES (
+        #{memberId},
+        #{productId},
+        #{quantity},
+        #{lockedQuantity},
+        #{averagePrice}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.partion.portfolio.domain.Holding">
+        UPDATE holdings
+        SET
+        quantity = #{quantity},
+        locked_quantity = #{lockedQuantity},
+        average_price = #{averagePrice}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

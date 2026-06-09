@@ -191,4 +191,38 @@
         </if>
     </select>
 
+    <select id="findByIdForUpdate" resultType="com.partion.product.domain.Product">
+        SELECT
+        id,
+        issuer_member_id,
+        category,
+        name,
+        summary,
+        description,
+        image_url,
+        extra_info,
+        target_amount,
+        current_amount,
+        token_price,
+        total_token_quantity,
+        funded_token_quantity,
+        expected_yield,
+        deadline,
+        status,
+        created_at,
+        updated_at
+        FROM products
+        WHERE id = #{id}
+        FOR UPDATE
+    </select>
+
+    <update id="updateFunding" parameterType="com.partion.product.domain.Product">
+        UPDATE products
+        SET
+        current_amount = #{currentAmount},
+        funded_token_quantity = #{fundedTokenQuantity},
+        status = #{status}
+        WHERE id = #{id}
+    </update>
+
 </mapper>

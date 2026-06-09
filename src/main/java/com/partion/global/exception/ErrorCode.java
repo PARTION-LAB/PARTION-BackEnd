@@ -39,6 +39,11 @@ public enum ErrorCode {
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."),
     PRODUCT_NOT_FUNDING(HttpStatus.BAD_REQUEST, "모집 중인 상품이 아닙니다."),
 
+    INVALID_INVESTMENT_QUANTITY(HttpStatus.BAD_REQUEST, "투자 수량은 0보다 커야 합니다."),
+    PRODUCT_FUNDING_CLOSED(HttpStatus.BAD_REQUEST, "모집이 종료된 상품입니다."),
+    PRODUCT_TOKEN_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "남은 모집 토큰 수량이 부족합니다."),
+    INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "예치금 잔액이 부족합니다."),
+
     BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."),
     BOARD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "게시글에 대한 권한이 없습니다."),
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),

@@ -49,4 +49,25 @@
         WHERE id = #{id}
     </update>
 
+    <select id="findByMemberIdForUpdate" resultType="com.partion.wallet.domain.Wallet">
+        SELECT
+        id,
+        member_id,
+        available_balance,
+        locked_balance,
+        created_at,
+        updated_at
+        FROM wallets
+        WHERE member_id = #{memberId}
+        FOR UPDATE
+    </select>
+
+    <update id="updateBalance" parameterType="com.partion.wallet.domain.Wallet">
+        UPDATE wallets
+        SET
+        available_balance = #{availableBalance},
+        locked_balance = #{lockedBalance}
+        WHERE id = #{id}
+    </update>
+
 </mapper>

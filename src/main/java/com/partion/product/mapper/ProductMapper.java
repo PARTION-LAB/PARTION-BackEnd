@@ -47,4 +47,8 @@ public interface ProductMapper {
             @Param("category") String category,
             @Param("keyword") String keyword
     );
+
+    Optional<Product> findByIdForUpdate(@Param("id") Long id);
+
+    void updateFunding(Product product);
 }

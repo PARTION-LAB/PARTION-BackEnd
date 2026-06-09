@@ -17,4 +17,8 @@ public interface WalletMapper {
             @Param("id") Long id,
             @Param("amount") BigDecimal amount
     );
+
+    Optional<Wallet> findByMemberIdForUpdate(@Param("memberId") Long memberId);
+
+    void updateBalance(Wallet wallet);
 }
