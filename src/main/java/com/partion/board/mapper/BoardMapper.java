@@ -23,4 +23,6 @@ public interface BoardMapper {
     Optional<Board> findById(@Param("id") Long id);
 
     void update(Board board);
+
+    void deleteById(@Param("id") Long id);
 }

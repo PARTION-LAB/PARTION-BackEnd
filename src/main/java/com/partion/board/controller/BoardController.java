@@ -61,4 +61,14 @@ public class BoardController {
 
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{boardId}")
+    public ResponseEntity<Void> deleteBoard(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long boardId
+    ) {
+        boardService.deleteBoard(userDetails.getMemberId(), boardId);
+
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -87,4 +87,16 @@ public class BoardService {
 
         return new BoardUpdateResponse(updatedBoard);
     }
+
+    @Transactional
+    public void deleteBoard(Long memberId, Long boardId) {
+        Board board = boardMapper.findById(boardId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        if (!board.getMemberId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.BOARD_ACCESS_DENIED);
+        }
+
+        boardMapper.deleteById(boardId);
+    }
 }
