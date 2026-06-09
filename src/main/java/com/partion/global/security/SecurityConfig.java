@@ -45,6 +45,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/boards").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/boards/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/boards/*/comments").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/investments/products").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/investments/products/*").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

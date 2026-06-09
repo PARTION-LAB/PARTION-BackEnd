@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.partion.investment.mapper.InvestmentMapper">
+
+    <insert id="insert" parameterType="com.partion.investment.domain.Investment"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO investments (
+        member_id,
+        product_id,
+        quantity,
+        price_per_token,
+        total_amount
+        )
+        VALUES (
+        #{memberId},
+        #{productId},
+        #{quantity},
+        #{pricePerToken},
+        #{totalAmount}
+        )
+    </insert>
+
+    <select id="findMyInvestments" resultType="com.partion.investment.dto.MyInvestmentResponse">
+        SELECT
+        i.id AS investment_id,
+        i.product_id,
+        p.name AS product_name,
+        p.category,
+        i.quantity,
+        i.price_per_token,
+        i.total_amount,
+        i.created_at
+        FROM investments i
+        JOIN products p ON i.product_id = p.id
+        WHERE i.member_id = #{memberId}
+        ORDER BY i.created_at DESC, i.id DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countMyInvestments" resultType="long">
+        SELECT COUNT(*)
+        FROM investments
+        WHERE member_id = #{memberId}
+    </select>
+
+</mapper>
