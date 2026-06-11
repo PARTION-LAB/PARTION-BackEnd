@@ -70,7 +70,7 @@ public class AuthService {
         );
     }
 
-    public TokenResponse login(LoginRequest request) {
+    public TokenIssueResult login(LoginRequest request) {
         Member member = memberMapper.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LOGIN_REQUEST));
 
@@ -95,18 +95,21 @@ public class AuthService {
                 Duration.ofMillis(jwtTokenProvider.getRefreshTokenExpirationMillis())
         );
 
-        return new TokenResponse(
+        return new TokenIssueResult(
                 accessToken,
                 refreshToken,
                 "Bearer",
-                jwtTokenProvider.getAccessTokenExpirationSeconds()
+                jwtTokenProvider.getAccessTokenExpirationSeconds(),
+                jwtTokenProvider.getRefreshTokenExpirationMillis() / 1000
         );
     }
 
-    public AccessTokenResponse reissue(ReissueRequest request) {
-        String refreshToken = request.getRefreshToken();
+    public AccessTokenResponse reissue(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
 
-        if(!jwtTokenProvider.validateToken(refreshToken)) {
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
@@ -114,11 +117,11 @@ public class AuthService {
 
         String savedRefreshToken = stringRedisTemplate.opsForValue().get("refresh:" + memberId);
 
-        if(savedRefreshToken == null) {
+        if (savedRefreshToken == null) {
             throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        if(!savedRefreshToken.equals(refreshToken)) {
+        if (!savedRefreshToken.equals(refreshToken)) {
             throw new BusinessException(ErrorCode.REFRESH_TOKEN_MISMATCH);
         }
 
@@ -171,7 +174,7 @@ public class AuthService {
         return new PasswordResetResponse(member.getEmail());
     }
 
-    public TokenResponse oauthLogin(OAuthLoginRequest request) {
+    public TokenIssueResult oauthLogin(OAuthLoginRequest request) {
         OAuthUserInfo userInfo =
                 oAuthClientService.getUserInfo(request.getProvider(), request.getAccessToken());
 
@@ -189,11 +192,12 @@ public class AuthService {
                 Duration.ofMillis(jwtTokenProvider.getRefreshTokenExpirationMillis())
         );
 
-        return new TokenResponse(
+        return new TokenIssueResult(
                 accessToken,
                 refreshToken,
                 "Bearer",
-                jwtTokenProvider.getAccessTokenExpirationSeconds()
+                jwtTokenProvider.getAccessTokenExpirationSeconds(),
+                jwtTokenProvider.getRefreshTokenExpirationMillis() / 1000
         );
     }
 

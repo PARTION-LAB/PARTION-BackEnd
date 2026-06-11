@@ -6,9 +6,13 @@ import com.partion.global.exception.BusinessException;
 import com.partion.global.exception.ErrorCode;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 
 @RequiredArgsConstructor
 @RestController
@@ -25,13 +29,21 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
-        TokenResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
+        TokenIssueResult result = authService.login(request);
+
+        ResponseCookie refreshCookie =
+                createRefreshTokenCookie(result.getRefreshToken(), result.getRefreshTokenMaxAge());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(result.toResponse());
     }
 
     @PostMapping("/reissue")
-    public ResponseEntity<AccessTokenResponse> reissue(@Valid @RequestBody ReissueRequest request) {
-        AccessTokenResponse response = authService.reissue(request);
+    public ResponseEntity<AccessTokenResponse> reissue(
+            @CookieValue(value = "refreshToken", required = false) String refreshToken
+    ) {
+        AccessTokenResponse response = authService.reissue(refreshToken);
         return ResponseEntity.ok(response);
     }
 
@@ -44,7 +56,11 @@ public class AuthController {
         String accessToken = authorizationHeader.substring(7);
         authService.logout(accessToken);
 
-        return ResponseEntity.noContent().build();
+        ResponseCookie deleteCookie = deleteRefreshTokenCookie();
+
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+                .build();
     }
 
     @PostMapping("/password/reset")
@@ -59,7 +75,33 @@ public class AuthController {
     public ResponseEntity<TokenResponse> oauthLogin(
             @Valid @RequestBody OAuthLoginRequest request
     ) {
-        TokenResponse response = authService.oauthLogin(request);
-        return ResponseEntity.ok(response);
+        TokenIssueResult result = authService.oauthLogin(request);
+
+        ResponseCookie refreshCookie =
+                createRefreshTokenCookie(result.getRefreshToken(), result.getRefreshTokenMaxAge());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(result.toResponse());
+    }
+
+    private ResponseCookie createRefreshTokenCookie(String refreshToken, long maxAgeSeconds) {
+        return ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(Duration.ofSeconds(maxAgeSeconds))
+                .sameSite("Lax")
+                .build();
+    }
+
+    private ResponseCookie deleteRefreshTokenCookie() {
+        return ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
     }
 }
