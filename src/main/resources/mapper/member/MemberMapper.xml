@@ -73,15 +73,25 @@
     <update id="updateNickname">
         UPDATE members
         SET
-        nickname = #{nickname}
+        nickname = #{nickname},
+        updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>
 
     <update id="updatePassword">
         UPDATE members
         SET
-        password = #{password}
+        password = #{password},
+        updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
+    </update>
+
+    <update id="updatePasswordByEmail">
+        UPDATE members
+        SET
+        password = #{password},
+        updated_at = CURRENT_TIMESTAMP
+        WHERE email = #{email}
     </update>
 
 </mapper>

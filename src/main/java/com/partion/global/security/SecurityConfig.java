@@ -39,6 +39,7 @@ public class SecurityConfig {
                                 "/api/auth/reissue",
                                 "/api/auth/email/send",
                                 "/api/auth/email/verify",
+                                "/api/auth/password/reset",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()

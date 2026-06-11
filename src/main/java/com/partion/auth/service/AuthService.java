@@ -150,4 +150,19 @@ public class AuthService {
             );
         }
     }
+
+    public PasswordResetResponse resetPassword(PasswordResetRequest request) {
+        Member member = memberMapper.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        emailVerificationService.validateEmailVerified("PASSWORD_RESET", request.getEmail());
+
+        String encodedPassword = passwordEncoder.encode(request.getNewPassword());
+
+        memberMapper.updatePasswordByEmail(member.getEmail(), encodedPassword);
+
+        emailVerificationService.deleteVerifiedEmail("PASSWORD_RESET", request.getEmail());
+
+        return new PasswordResetResponse(member.getEmail());
+    }
 }

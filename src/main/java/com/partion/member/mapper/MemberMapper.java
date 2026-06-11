@@ -21,4 +21,8 @@ public interface MemberMapper {
             @Param("id") Long id,
             @Param("password") String password
     );
+    void updatePasswordByEmail(
+            @Param("email") String email,
+            @Param("password") String password
+    );
 }
