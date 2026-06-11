@@ -46,4 +46,20 @@ public class AuthController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<PasswordResetResponse> resetPassword(
+            @Valid @RequestBody PasswordResetRequest request
+    ) {
+        PasswordResetResponse response = authService.resetPassword(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/oauth/login")
+    public ResponseEntity<TokenResponse> oauthLogin(
+            @Valid @RequestBody OAuthLoginRequest request
+    ) {
+        TokenResponse response = authService.oauthLogin(request);
+        return ResponseEntity.ok(response);
+    }
 }

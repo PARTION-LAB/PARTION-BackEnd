@@ -27,6 +27,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final StringRedisTemplate stringRedisTemplate;
+    private final EmailVerificationService emailVerificationService;
+    private final OAuthClientService oAuthClientService;
 
     public SignupResponse signup(SignupRequest request) {
         if(memberMapper.existsByEmail(request.getEmail())) {
@@ -36,6 +38,8 @@ public class AuthService {
         if(memberMapper.existsByNickname(request.getNickname())) {
             throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
         }
+
+        emailVerificationService.validateEmailVerified("SIGNUP", request.getEmail());
 
         String encodePassword = passwordEncoder.encode(request.getPassword());
 
@@ -57,6 +61,8 @@ public class AuthService {
 
         walletMapper.insert(wallet);
 
+        emailVerificationService.deleteVerifiedEmail("SIGNUP", request.getEmail());
+
         return new SignupResponse(
                 member.getId(),
                 member.getEmail(),
@@ -67,6 +73,10 @@ public class AuthService {
     public TokenResponse login(LoginRequest request) {
         Member member = memberMapper.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LOGIN_REQUEST));
+
+        if (!"LOCAL".equals(member.getProvider()) || member.getPassword() == null) {
+            throw new BusinessException(ErrorCode.INVALID_LOGIN_REQUEST);
+        }
 
         if(!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_LOGIN_REQUEST);
@@ -144,5 +154,77 @@ public class AuthService {
                     TimeUnit.MILLISECONDS
             );
         }
+    }
+
+    public PasswordResetResponse resetPassword(PasswordResetRequest request) {
+        Member member = memberMapper.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        emailVerificationService.validateEmailVerified("PASSWORD_RESET", request.getEmail());
+
+        String encodedPassword = passwordEncoder.encode(request.getNewPassword());
+
+        memberMapper.updatePasswordByEmail(member.getEmail(), encodedPassword);
+
+        emailVerificationService.deleteVerifiedEmail("PASSWORD_RESET", request.getEmail());
+
+        return new PasswordResetResponse(member.getEmail());
+    }
+
+    public TokenResponse oauthLogin(OAuthLoginRequest request) {
+        OAuthUserInfo userInfo =
+                oAuthClientService.getUserInfo(request.getProvider(), request.getAccessToken());
+
+        Member member = memberMapper.findByProviderAndProviderId(
+                userInfo.getProvider(),
+                userInfo.getProviderId()
+        ).orElseGet(() -> createOAuthMember(request, userInfo));
+
+        String accessToken = jwtTokenProvider.createAccessToken(member);
+        String refreshToken = jwtTokenProvider.createRefreshToken(member);
+
+        stringRedisTemplate.opsForValue().set(
+                "refresh:" + member.getId(),
+                refreshToken,
+                Duration.ofMillis(jwtTokenProvider.getRefreshTokenExpirationMillis())
+        );
+
+        return new TokenResponse(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                jwtTokenProvider.getAccessTokenExpirationSeconds()
+        );
+    }
+
+    private Member createOAuthMember(OAuthLoginRequest request, OAuthUserInfo userInfo) {
+        if (memberMapper.existsByEmail(userInfo.getEmail())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
+        if (memberMapper.existsByNickname(request.getNickname())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        Member member = Member.builder()
+                .email(userInfo.getEmail())
+                .password(null)
+                .nickname(request.getNickname())
+                .provider(userInfo.getProvider())
+                .providerId(userInfo.getProviderId())
+                .role("USER")
+                .build();
+
+        memberMapper.insert(member);
+
+        Wallet wallet = Wallet.builder()
+                .memberId(member.getId())
+                .availableBalance(BigDecimal.ZERO)
+                .lockedBalance(BigDecimal.ZERO)
+                .build();
+
+        walletMapper.insert(wallet);
+
+        return member;
     }
 }
