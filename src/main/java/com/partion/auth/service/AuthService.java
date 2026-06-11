@@ -27,6 +27,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final StringRedisTemplate stringRedisTemplate;
+    private final EmailVerificationService emailVerificationService;
 
     public SignupResponse signup(SignupRequest request) {
         if(memberMapper.existsByEmail(request.getEmail())) {
@@ -36,6 +37,8 @@ public class AuthService {
         if(memberMapper.existsByNickname(request.getNickname())) {
             throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
         }
+
+        emailVerificationService.validateEmailVerified("SIGNUP", request.getEmail());
 
         String encodePassword = passwordEncoder.encode(request.getPassword());
 
@@ -56,6 +59,8 @@ public class AuthService {
                 .build();
 
         walletMapper.insert(wallet);
+
+        emailVerificationService.deleteVerifiedEmail("SIGNUP", request.getEmail());
 
         return new SignupResponse(
                 member.getId(),

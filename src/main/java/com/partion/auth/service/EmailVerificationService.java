@@ -118,4 +118,22 @@ public class EmailVerificationService {
     private String buildVerifiedKey(String purpose, String email) {
         return "email:verified:" + purpose + ":" + email;
     }
+
+    public void validateEmailVerified(String purpose, String email) {
+        validatePurpose(purpose);
+
+        String verifiedKey = buildVerifiedKey(purpose, email);
+        String verified = redisTemplate.opsForValue().get(verifiedKey);
+
+        if (!"true".equals(verified)) {
+            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
+        }
+    }
+
+    public void deleteVerifiedEmail(String purpose, String email) {
+        validatePurpose(purpose);
+
+        String verifiedKey = buildVerifiedKey(purpose, email);
+        redisTemplate.delete(verifiedKey);
+    }
 }
