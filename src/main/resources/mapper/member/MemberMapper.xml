@@ -94,4 +94,20 @@
         WHERE email = #{email}
     </update>
 
+    <select id="findByProviderAndProviderId" resultType="com.partion.member.domain.Member">
+        SELECT
+        id,
+        email,
+        password,
+        nickname,
+        provider,
+        provider_id,
+        role,
+        created_at,
+        updated_at
+        FROM members
+        WHERE provider = #{provider}
+        AND provider_id = #{providerId}
+    </select>
+
 </mapper>

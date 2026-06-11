@@ -25,4 +25,8 @@ public interface MemberMapper {
             @Param("email") String email,
             @Param("password") String password
     );
+    Optional<Member> findByProviderAndProviderId(
+            @Param("provider") String provider,
+            @Param("providerId") String providerId
+    );
 }
