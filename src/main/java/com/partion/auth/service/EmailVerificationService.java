@@ -1,5 +1,7 @@
 package com.partion.auth.service;
 
+import com.partion.auth.dto.EmailVerificationCheckRequest;
+import com.partion.auth.dto.EmailVerificationCheckResponse;
 import com.partion.auth.dto.EmailVerificationSendRequest;
 import com.partion.auth.dto.EmailVerificationSendResponse;
 import com.partion.global.exception.BusinessException;
@@ -20,6 +22,7 @@ public class EmailVerificationService {
 
     private static final long VERIFICATION_CODE_EXPIRE_SECONDS = 300;
     private static final Set<String> ALLOWED_PURPOSES = Set.of("SIGNUP", "PASSWORD_RESET");
+    private static final long VERIFIED_EXPIRE_SECONDS = 1800;
 
     private final JavaMailSender mailSender;
     private final StringRedisTemplate redisTemplate;
@@ -76,5 +79,43 @@ public class EmailVerificationService {
                 """.formatted(code));
 
         mailSender.send(message);
+    }
+
+    public EmailVerificationCheckResponse verifyCode(
+            EmailVerificationCheckRequest request
+    ) {
+        validatePurpose(request.getPurpose());
+
+        String codeKey = buildCodeKey(request.getPurpose(), request.getEmail());
+        String savedCode = redisTemplate.opsForValue().get(codeKey);
+
+        if (savedCode == null) {
+            throw new BusinessException(ErrorCode.EMAIL_VERIFICATION_CODE_EXPIRED);
+        }
+
+        if (!savedCode.equals(request.getCode())) {
+            throw new BusinessException(ErrorCode.EMAIL_VERIFICATION_CODE_MISMATCH);
+        }
+
+        String verifiedKey = buildVerifiedKey(request.getPurpose(), request.getEmail());
+
+        redisTemplate.opsForValue().set(
+                verifiedKey,
+                "true",
+                Duration.ofSeconds(VERIFIED_EXPIRE_SECONDS)
+        );
+
+        redisTemplate.delete(codeKey);
+
+        return new EmailVerificationCheckResponse(
+                request.getEmail(),
+                request.getPurpose(),
+                true,
+                VERIFIED_EXPIRE_SECONDS
+        );
+    }
+
+    private String buildVerifiedKey(String purpose, String email) {
+        return "email:verified:" + purpose + ":" + email;
     }
 }
