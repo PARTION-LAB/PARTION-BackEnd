@@ -1,12 +1,12 @@
 package com.partion.auth.controller;
 
-import com.partion.auth.dto.EmailVerificationCheckRequest;
-import com.partion.auth.dto.EmailVerificationCheckResponse;
 import com.partion.auth.dto.EmailVerificationSendRequest;
 import com.partion.auth.dto.EmailVerificationSendResponse;
 import com.partion.auth.service.EmailVerificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,13 +27,15 @@ public class EmailVerificationController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/verify")
-    public ResponseEntity<EmailVerificationCheckResponse> verifyCode(
-            @Valid @RequestBody EmailVerificationCheckRequest request
+    @GetMapping("/verify-link")
+    public ResponseEntity<Void> verifyEmailLink(
+            @RequestParam String purpose,
+            @RequestParam String token
     ) {
-        EmailVerificationCheckResponse response =
-                emailVerificationService.verifyCode(request);
+        String redirectUrl = emailVerificationService.verifyEmailLink(purpose, token);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header(HttpHeaders.LOCATION, redirectUrl)
+                .build();
     }
 }
