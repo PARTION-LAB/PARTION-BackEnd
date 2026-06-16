@@ -19,4 +19,8 @@ public interface InvestmentMapper {
     );
 
     long countMyInvestments(@Param("memberId") Long memberId);
+
+    List<Investment> findCompletedByProductIdForUpdate(@Param("productId") Long productId);
+
+    void updateStatusToRefunded(@Param("id") Long id);
 }

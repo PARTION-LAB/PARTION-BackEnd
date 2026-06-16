@@ -15,6 +15,7 @@ public class ProductStatusBatchScheduler {
     private final JobOperator jobOperator;
     private final Job closeExpiredFundingProductsJob;
 
+    // @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     public void runCloseExpiredFundingProductsJob() throws Exception {
         JobParameters jobParameters = new JobParametersBuilder()

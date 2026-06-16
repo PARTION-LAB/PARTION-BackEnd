@@ -47,4 +47,30 @@
         WHERE member_id = #{memberId}
     </select>
 
+    <select id="findCompletedByProductIdForUpdate" resultType="com.partion.investment.domain.Investment">
+        SELECT
+        id,
+        member_id,
+        product_id,
+        quantity,
+        price_per_token,
+        total_amount,
+        status,
+        refunded_at,
+        created_at
+        FROM investments
+        WHERE product_id = #{productId}
+        AND status = 'COMPLETED'
+        FOR UPDATE
+    </select>
+
+    <update id="updateStatusToRefunded">
+        UPDATE investments
+        SET
+        status = 'REFUNDED',
+        refunded_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+        AND status = 'COMPLETED'
+    </update>
+
 </mapper>

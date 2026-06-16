@@ -69,6 +69,7 @@
         FROM holdings h
         JOIN products p ON h.product_id = p.id
         WHERE h.member_id = #{memberId}
+        AND h.quantity > 0
         ORDER BY h.updated_at DESC, h.id DESC
         LIMIT #{limit}
         OFFSET #{offset}
@@ -78,6 +79,7 @@
         SELECT COUNT(*)
         FROM holdings
         WHERE member_id = #{memberId}
+        AND quantity > 0
     </select>
 
     <select id="sumTokenValuationAmount" resultType="java.math.BigDecimal">
@@ -85,6 +87,7 @@
         FROM holdings h
         JOIN products p ON h.product_id = p.id
         WHERE h.member_id = #{memberId}
+        AND h.quantity > 0
     </select>
 
     <select id="sumExpectedAnnualDividend" resultType="java.math.BigDecimal">
@@ -92,6 +95,7 @@
         FROM holdings h
         JOIN products p ON h.product_id = p.id
         WHERE h.member_id = #{memberId}
+        AND h.quantity > 0
     </select>
 
     <update id="updateLockedQuantity" parameterType="com.partion.portfolio.domain.Holding">

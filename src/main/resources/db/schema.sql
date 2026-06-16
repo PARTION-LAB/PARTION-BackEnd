@@ -112,6 +112,8 @@ CREATE TABLE investments (
                              quantity BIGINT NOT NULL,
                              price_per_token DECIMAL(19, 2) NOT NULL,
                              total_amount DECIMAL(19, 2) NOT NULL,
+                             status VARCHAR(30) NOT NULL DEFAULT 'COMPLETED',
+                             refunded_at DATETIME,
                              created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
                              CONSTRAINT fk_investment_member
@@ -255,3 +257,4 @@ CREATE INDEX idx_trades_seller ON trades(seller_member_id);
 CREATE INDEX idx_wallet_transactions_wallet ON wallet_transactions(wallet_id);
 CREATE INDEX idx_boards_category ON boards(category);
 CREATE INDEX idx_comments_board ON comments(board_id);
+CREATE INDEX idx_investments_product_status ON investments(product_id, status);

@@ -53,5 +53,7 @@ public interface ProductMapper {
 
     void updateFunding(Product product);
 
-    int closeExpiredFundingProducts(@Param("today") LocalDate today);
+    List<Product> findExpiredFailedFundingProducts(@Param("today") LocalDate today);
+
+    void closeProduct(@Param("id") Long id);
 }
