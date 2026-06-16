@@ -225,4 +225,39 @@
         WHERE id = #{id}
     </update>
 
+    <select id="findExpiredFailedFundingProducts" resultType="com.partion.product.domain.Product">
+        SELECT
+        id,
+        issuer_member_id,
+        category,
+        name,
+        summary,
+        description,
+        image_url,
+        extra_info,
+        target_amount,
+        current_amount,
+        token_price,
+        total_token_quantity,
+        funded_token_quantity,
+        expected_yield,
+        deadline,
+        status,
+        created_at,
+        updated_at
+        FROM products
+        WHERE status = 'FUNDING'
+        AND deadline &lt; #{today}
+        AND current_amount &lt; target_amount
+    </select>
+
+    <update id="closeProduct">
+        UPDATE products
+        SET
+        status = 'CLOSED',
+        updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+        AND status = 'FUNDING'
+    </update>
+
 </mapper>
