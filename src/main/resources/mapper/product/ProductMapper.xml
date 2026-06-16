@@ -225,4 +225,14 @@
         WHERE id = #{id}
     </update>
 
+    <update id="closeExpiredFundingProducts">
+        UPDATE products
+        SET
+        status = 'CLOSED',
+        updated_at = CURRENT_TIMESTAMP
+        WHERE status = 'FUNDING'
+        AND deadline &lt; #{today}
+        AND current_amount &lt; target_amount
+    </update>
+
 </mapper>

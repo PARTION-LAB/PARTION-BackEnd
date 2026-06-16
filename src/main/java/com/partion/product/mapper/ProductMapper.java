@@ -4,6 +4,7 @@ import com.partion.product.domain.Product;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,4 +52,6 @@ public interface ProductMapper {
     Optional<Product> findByIdForUpdate(@Param("id") Long id);
 
     void updateFunding(Product product);
+
+    int closeExpiredFundingProducts(@Param("today") LocalDate today);
 }
