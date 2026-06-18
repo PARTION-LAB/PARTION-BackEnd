@@ -33,16 +33,36 @@ public class AiChatService {
             """;
 
     private final ChatClient chatClient;
+    private final AiDocumentSearchService aiDocumentSearchService;
 
-    public AiChatService(ChatClient.Builder chatClientBuilder) {
+    public AiChatService(
+            ChatClient.Builder chatClientBuilder,
+            AiDocumentSearchService aiDocumentSearchService
+    ) {
         this.chatClient = chatClientBuilder
                 .defaultSystem(SYSTEM_PROMPT)
                 .build();
+        this.aiDocumentSearchService = aiDocumentSearchService;
     }
 
     public AiChatResponse chat(AiChatRequest request) {
+        String context = aiDocumentSearchService.searchRelevantContext(request.getMessage());
+
+        String userPrompt = """
+            아래는 Partion 서비스 가이드 문서에서 검색된 참고 내용입니다.
+
+            [참고 문서]
+            %s
+
+            [사용자 질문]
+            %s
+
+            참고 문서를 우선적으로 활용해 답변하세요.
+            참고 문서에 없는 내용은 추측하지 말고, 서비스 메뉴에서 확인이 필요하다고 안내하세요.
+            """.formatted(context, request.getMessage());
+
         String answer = chatClient.prompt()
-                .user(request.getMessage())
+                .user(userPrompt)
                 .call()
                 .content();
 
