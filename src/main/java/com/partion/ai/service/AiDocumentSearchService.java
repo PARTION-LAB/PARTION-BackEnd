@@ -11,12 +11,17 @@ import java.util.List;
 @Service
 public class AiDocumentSearchService {
 
-    private static final String GUIDE_DOCUMENT_PATH = "ai-docs/partion-service-guide.md";
+    private static final List<String> DOCUMENT_PATHS = List.of(
+            "ai-docs/partion-service-guide.md",
+            "ai-docs/sto-guide.md"
+    );
     private static final int MAX_CONTEXT_SECTION_COUNT = 3;
 
     public String searchRelevantContext(String question) {
-        String document = loadDocument();
-        List<String> sections = splitSections(document);
+        List<String> sections = DOCUMENT_PATHS.stream()
+                .map(this::loadDocument)
+                .flatMap(document -> splitSections(document).stream())
+                .toList();
 
         return sections.stream()
                 .filter(section -> calculateScore(section, question) > 0)
@@ -31,12 +36,12 @@ public class AiDocumentSearchService {
                 .orElse("관련 문서를 찾지 못했습니다.");
     }
 
-    private String loadDocument() {
+    private String loadDocument(String path) {
         try {
-            ClassPathResource resource = new ClassPathResource(GUIDE_DOCUMENT_PATH);
+            ClassPathResource resource = new ClassPathResource(path);
             return resource.getContentAsString(StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new IllegalStateException("AI 서비스 가이드 문서를 읽을 수 없습니다.", e);
+            throw new IllegalStateException("AI 안내 문서를 읽을 수 없습니다: " + path, e);
         }
     }
 

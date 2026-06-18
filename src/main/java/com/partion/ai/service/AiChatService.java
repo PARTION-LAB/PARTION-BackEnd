@@ -49,7 +49,7 @@ public class AiChatService {
         String context = aiDocumentSearchService.searchRelevantContext(request.getMessage());
 
         String userPrompt = """
-            아래는 Partion 서비스 가이드 문서에서 검색된 참고 내용입니다.
+            아래는 Partion 서비스 가이드와 STO 안내 문서에서 검색된 참고 내용입니다.
 
             [참고 문서]
             %s
