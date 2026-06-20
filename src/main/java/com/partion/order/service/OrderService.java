@@ -212,6 +212,8 @@ public class OrderService {
                 .build();
 
         orderMapper.updateStatus(canceledOrder);
+
+        orderCommandPublisher.publishCancelAfterCommit(order);
     }
 
     private void unlockBuyAmount(Order order) {

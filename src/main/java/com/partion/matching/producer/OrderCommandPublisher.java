@@ -31,6 +31,22 @@ public class OrderCommandPublisher {
         publish(event);
     }
 
+    public void publishCancelAfterCommit(Order order) {
+        OrderCommandEvent event = OrderCommandEvent.cancel(order);
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    publish(event);
+                }
+            });
+            return;
+        }
+
+        publish(event);
+    }
+
     private void publish(OrderCommandEvent event) {
         kafkaTemplate.send(
                 KafkaTopicConfig.ORDER_COMMANDS,
