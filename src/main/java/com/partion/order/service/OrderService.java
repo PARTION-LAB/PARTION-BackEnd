@@ -3,6 +3,7 @@ package com.partion.order.service;
 import com.partion.global.exception.BusinessException;
 import com.partion.global.exception.ErrorCode;
 import com.partion.global.response.PageResponse;
+import com.partion.matching.producer.OrderCommandPublisher;
 import com.partion.order.domain.Order;
 import com.partion.order.dto.CreateOrderRequest;
 import com.partion.order.dto.MyOrderResponse;
@@ -41,6 +42,7 @@ public class OrderService {
     private final WalletMapper walletMapper;
     private final WalletTransactionMapper walletTransactionMapper;
     private final HoldingMapper holdingMapper;
+    private final OrderCommandPublisher orderCommandPublisher;
 
     @Transactional
     public OrderCreateResponse createOrder(Long memberId, CreateOrderRequest request) {
@@ -73,6 +75,8 @@ public class OrderService {
         }
 
         orderMapper.insert(order);
+
+        orderCommandPublisher.publishCreateAfterCommit(order);
 
         return new OrderCreateResponse(order);
     }
