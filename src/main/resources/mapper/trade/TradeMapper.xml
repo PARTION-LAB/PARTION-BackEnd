@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.partion.trade.mapper.TradeMapper">
+
+    <insert id="insert" parameterType="com.partion.trade.domain.Trade"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO trades (
+        product_id,
+        buy_order_id,
+        sell_order_id,
+        buyer_member_id,
+        seller_member_id,
+        price,
+        quantity
+        )
+        VALUES (
+        #{productId},
+        #{buyOrderId},
+        #{sellOrderId},
+        #{buyerMemberId},
+        #{sellerMemberId},
+        #{price},
+        #{quantity}
+        )
+    </insert>
+
+    <select id="findRecentTrades" resultType="com.partion.trade.dto.RecentTradeResponse">
+        SELECT
+        t.id AS trade_id,
+        t.product_id,
+        p.name AS symbol,
+        t.price,
+        t.quantity,
+        t.traded_at
+        FROM trades t
+        JOIN products p ON t.product_id = p.id
+        WHERE t.product_id = #{productId}
+        ORDER BY t.traded_at DESC, t.id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findMyTrades" resultType="com.partion.trade.dto.MyTradeResponse">
+        SELECT
+        t.id AS trade_id,
+        t.product_id,
+        p.name AS product_name,
+        CASE
+        WHEN t.buyer_member_id = #{memberId} THEN 'BUY'
+        WHEN t.seller_member_id = #{memberId} THEN 'SELL'
+        END AS type,
+        t.price,
+        t.quantity,
+        (t.price * t.quantity) AS total_amount,
+        t.traded_at
+        FROM trades t
+        JOIN products p ON t.product_id = p.id
+        WHERE (t.buyer_member_id = #{memberId}
+        OR t.seller_member_id = #{memberId})
+        <if test="type != null and type != ''">
+            <choose>
+                <when test="type == 'BUY'">
+                    AND t.buyer_member_id = #{memberId}
+                </when>
+                <when test="type == 'SELL'">
+                    AND t.seller_member_id = #{memberId}
+                </when>
+            </choose>
+        </if>
+        ORDER BY t.traded_at DESC, t.id DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countMyTrades" resultType="long">
+        SELECT COUNT(*)
+        FROM trades t
+        WHERE (t.buyer_member_id = #{memberId}
+        OR t.seller_member_id = #{memberId})
+        <if test="type != null and type != ''">
+            <choose>
+                <when test="type == 'BUY'">
+                    AND t.buyer_member_id = #{memberId}
+                </when>
+                <when test="type == 'SELL'">
+                    AND t.seller_member_id = #{memberId}
+                </when>
+            </choose>
+        </if>
+    </select>
+
+</mapper>

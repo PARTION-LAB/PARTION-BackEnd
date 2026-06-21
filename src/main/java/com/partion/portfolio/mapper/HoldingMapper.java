@@ -34,4 +34,6 @@ public interface HoldingMapper {
     BigDecimal sumExpectedAnnualDividend(@Param("memberId") Long memberId);
 
     void updateLockedQuantity(Holding holding);
+
+    List<HoldingResponse> findAllMyHoldings(@Param("memberId") Long memberId);
 }

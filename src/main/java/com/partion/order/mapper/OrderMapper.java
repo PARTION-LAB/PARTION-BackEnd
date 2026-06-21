@@ -2,6 +2,7 @@ package com.partion.order.mapper;
 
 import com.partion.order.domain.Order;
 import com.partion.order.dto.MyOrderResponse;
+import com.partion.trade.dto.OrderBookLevelResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -30,4 +31,12 @@ public interface OrderMapper {
     Optional<Order> findByIdForUpdate(@Param("id") Long id);
 
     void updateStatus(Order order);
+
+    void updateRemainingQuantityAndStatus(Order order);
+
+    List<OrderBookLevelResponse> findOrderBookLevels(
+            @Param("productId") Long productId,
+            @Param("type") String type,
+            @Param("limit") int limit
+    );
 }
