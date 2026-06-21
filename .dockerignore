@@ -2,3 +2,6 @@ src/main/resources/application-local.properties
 target/
 .git/
 .idea/
+.vscode
+*.log
+.DS_Store
