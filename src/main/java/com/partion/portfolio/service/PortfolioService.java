@@ -6,6 +6,7 @@ import com.partion.global.response.PageResponse;
 import com.partion.portfolio.dto.HoldingResponse;
 import com.partion.portfolio.dto.PortfolioSummaryResponse;
 import com.partion.portfolio.mapper.HoldingMapper;
+import com.partion.trade.service.CurrentPriceCacheService;
 import com.partion.wallet.domain.Wallet;
 import com.partion.wallet.mapper.WalletMapper;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class PortfolioService {
 
     private final HoldingMapper holdingMapper;
     private final WalletMapper walletMapper;
+    private final CurrentPriceCacheService currentPriceCacheService;
 
     public PageResponse<HoldingResponse> getMyHoldings(Long memberId, int page, int size) {
         validatePageRequest(page, size);
@@ -31,9 +33,16 @@ public class PortfolioService {
         List<HoldingResponse> content =
                 holdingMapper.findMyHoldings(memberId, size, offset);
 
+        content.forEach(this::applyCachedCurrentPrice);
+
         long totalElements = holdingMapper.countMyHoldings(memberId);
 
         return new PageResponse<>(content, page, size, totalElements);
+    }
+
+    private void applyCachedCurrentPrice(HoldingResponse holding) {
+        currentPriceCacheService.getCurrentPrice(holding.getProductId())
+                .ifPresent(holding::applyCurrentPrice);
     }
 
     private void validatePageRequest(int page, int size) {
@@ -46,11 +55,16 @@ public class PortfolioService {
         Wallet wallet = walletMapper.findByMemberId(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WALLET_NOT_FOUND));
 
-        BigDecimal tokenValuationAmount =
-                holdingMapper.sumTokenValuationAmount(memberId);
+        List<HoldingResponse> holdings = holdingMapper.findAllMyHoldings(memberId);
+        holdings.forEach(this::applyCachedCurrentPrice);
 
-        BigDecimal expectedAnnualDividend =
-                holdingMapper.sumExpectedAnnualDividend(memberId);
+        BigDecimal tokenValuationAmount = holdings.stream()
+                .map(HoldingResponse::getValuationAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal expectedAnnualDividend = holdings.stream()
+                .map(HoldingResponse::getExpectedAnnualDividend)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new PortfolioSummaryResponse(
                 tokenValuationAmount,
