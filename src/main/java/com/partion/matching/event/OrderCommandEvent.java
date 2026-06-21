@@ -16,7 +16,7 @@ public record OrderCommandEvent(
 
     public static OrderCommandEvent create(Order order) {
         return new OrderCommandEvent(
-                "CREATE",
+                "NEW_ORDER",
                 order.getId(),
                 order.getMemberId(),
                 order.getProductId(),
@@ -28,7 +28,7 @@ public record OrderCommandEvent(
 
     public static OrderCommandEvent cancel(Order order) {
         return new OrderCommandEvent(
-                "CANCEL",
+                "CANCEL_ORDER",
                 order.getId(),
                 order.getMemberId(),
                 order.getProductId(),
