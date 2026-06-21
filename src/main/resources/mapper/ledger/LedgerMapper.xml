@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.partion.ledger.mapper.LedgerMapper">
+
+    <select id="findBlocks" resultType="com.partion.ledger.dto.LedgerBlockRow">
+        SELECT
+        b.id,
+        b.block_number,
+        b.previous_hash,
+        b.merkle_root,
+        b.current_hash,
+        b.created_at,
+        COUNT(e.id) AS event_count
+        FROM ledger_blocks b
+        LEFT JOIN ledger_events e ON e.block_id = b.id
+        GROUP BY b.id, b.block_number, b.previous_hash, b.merkle_root, b.current_hash, b.created_at
+        ORDER BY b.block_number DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countBlocks" resultType="long">
+        SELECT COUNT(*)
+        FROM ledger_blocks
+    </select>
+
+    <select id="findBlockByNumber" resultType="com.partion.ledger.dto.LedgerBlockRow">
+        SELECT
+        b.id,
+        b.block_number,
+        b.previous_hash,
+        b.merkle_root,
+        b.current_hash,
+        b.created_at,
+        COUNT(e.id) AS event_count
+        FROM ledger_blocks b
+        LEFT JOIN ledger_events e ON e.block_id = b.id
+        WHERE b.block_number = #{blockNumber}
+        GROUP BY b.id, b.block_number, b.previous_hash, b.merkle_root, b.current_hash, b.created_at
+    </select>
+
+    <select id="findLatestBlock" resultType="com.partion.ledger.dto.LedgerBlockRow">
+        SELECT
+        b.id,
+        b.block_number,
+        b.previous_hash,
+        b.merkle_root,
+        b.current_hash,
+        b.created_at,
+        COUNT(e.id) AS event_count
+        FROM ledger_blocks b
+        LEFT JOIN ledger_events e ON e.block_id = b.id
+        GROUP BY b.id, b.block_number, b.previous_hash, b.merkle_root, b.current_hash, b.created_at
+        ORDER BY b.block_number DESC
+        LIMIT 1
+    </select>
+
+    <select id="findAllBlocksForVerify" resultType="com.partion.ledger.dto.LedgerBlockRow">
+        SELECT
+        b.id,
+        b.block_number,
+        b.previous_hash,
+        b.merkle_root,
+        b.current_hash,
+        b.created_at,
+        COUNT(e.id) AS event_count
+        FROM ledger_blocks b
+        LEFT JOIN ledger_events e ON e.block_id = b.id
+        GROUP BY b.id, b.block_number, b.previous_hash, b.merkle_root, b.current_hash, b.created_at
+        ORDER BY b.block_number ASC
+    </select>
+
+    <select id="findTransactionsByBlockId" resultType="com.partion.ledger.dto.LedgerTransactionRow">
+        SELECT
+        id,
+        block_id,
+        transaction_hash,
+        payload_hash,
+        event_type,
+        reference_type,
+        reference_id,
+        payload AS payload_json,
+        created_at
+        FROM ledger_events
+        WHERE block_id = #{blockId}
+        ORDER BY id ASC
+    </select>
+
+    <select id="findTransactions" resultType="com.partion.ledger.dto.LedgerTransactionRow">
+        SELECT
+        id,
+        block_id,
+        transaction_hash,
+        payload_hash,
+        event_type,
+        reference_type,
+        reference_id,
+        payload AS payload_json,
+        created_at
+        FROM ledger_events
+        ORDER BY created_at DESC, id DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countTransactions" resultType="long">
+        SELECT COUNT(*)
+        FROM ledger_events
+    </select>
+
+    <select id="findTransactionByHash" resultType="com.partion.ledger.dto.LedgerTransactionRow">
+        SELECT
+        id,
+        block_id,
+        transaction_hash,
+        payload_hash,
+        event_type,
+        reference_type,
+        reference_id,
+        payload AS payload_json,
+        created_at
+        FROM ledger_events
+        WHERE transaction_hash = #{transactionHash}
+    </select>
+
+</mapper>

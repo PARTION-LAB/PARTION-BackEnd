@@ -2,12 +2,16 @@ package com.partion.matching.service;
 
 import com.partion.global.exception.BusinessException;
 import com.partion.global.exception.ErrorCode;
+import com.partion.ledger.event.LedgerEvent;
 import com.partion.matching.config.KafkaTopicConfig;
 import com.partion.matching.event.TradeExecutedEvent;
 import com.partion.order.domain.Order;
 import com.partion.order.mapper.OrderMapper;
 import com.partion.portfolio.domain.Holding;
 import com.partion.portfolio.mapper.HoldingMapper;
+import com.partion.product.mapper.ProductMapper;
+import com.partion.ledger.service.LedgerEventPublisher;
+import com.partion.product.domain.Product;
 import com.partion.trade.domain.Trade;
 import com.partion.trade.mapper.TradeMapper;
 import com.partion.trade.service.CurrentPriceCacheService;
@@ -40,6 +44,8 @@ public class TradeSettlementService {
     private final WalletTransactionMapper walletTransactionMapper;
     private final HoldingMapper holdingMapper;
     private final CurrentPriceCacheService currentPriceCacheService;
+    private final ProductMapper productMapper;
+    private final LedgerEventPublisher ledgerEventPublisher;
 
     @KafkaListener(
             topics = KafkaTopicConfig.TRADE_EVENTS,
@@ -83,6 +89,41 @@ public class TradeSettlementService {
         settleSeller(sellOrder, event.price(), executableQuantity, trade);
 
         saveCurrentPriceAfterCommit(trade.getProductId(), trade.getPrice());
+
+        publishTradeSettledEvent(event, trade, buyOrder, sellOrder, executableQuantity);
+    }
+
+    private void publishTradeSettledEvent(
+            TradeExecutedEvent event,
+            Trade trade,
+            Order buyOrder,
+            Order sellOrder,
+            long executableQuantity
+    ) {
+        Product product = productMapper.findById(event.productId()).orElse(null);
+
+        BigDecimal amount = event.price()
+                .multiply(BigDecimal.valueOf(executableQuantity));
+
+        Long occurredAt = event.occurredAt() == null
+                ? System.currentTimeMillis()
+                : event.occurredAt();
+
+        ledgerEventPublisher.publishAfterCommit(new LedgerEvent(
+                "TRADE_SETTLED-" + trade.getId(),
+                "TRADE_SETTLED",
+                "TRADE",
+                trade.getId(),
+                event.productId(),
+                product == null ? null : product.getName(),
+                product == null ? null : product.getCategory(),
+                buyOrder.getId(),
+                sellOrder.getId(),
+                event.price(),
+                executableQuantity,
+                amount,
+                occurredAt
+        ));
     }
 
     private void saveCurrentPriceAfterCommit(Long productId, BigDecimal price) {

@@ -12,6 +12,7 @@ public class KafkaTopicConfig {
 
     public static final String ORDER_COMMANDS = "partion.order.commands";
     public static final String TRADE_EVENTS = "partion.trade.events";
+    public static final String LEDGER_EVENTS = "partion.ledger.events";
 
     @Bean
     public NewTopic orderCommandsTopic() {
@@ -24,6 +25,14 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic tradeEventsTopic() {
         return TopicBuilder.name(TRADE_EVENTS)
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic ledgerEventsTopic() {
+        return TopicBuilder.name(LEDGER_EVENTS)
                 .partitions(3)
                 .replicas(1)
                 .build();
