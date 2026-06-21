@@ -29,6 +29,7 @@ public class TradeSettlementService {
     private static final String FILLED = "FILLED";
     private static final String PARTIALLY_FILLED = "PARTIALLY_FILLED";
     private static final String TRADE = "TRADE";
+    private static final String OPEN = "OPEN";
 
     private final OrderMapper orderMapper;
     private final TradeMapper tradeMapper;
@@ -42,11 +43,22 @@ public class TradeSettlementService {
     )
     @Transactional
     public void handleTradeExecuted(TradeExecutedEvent event) {
-        Order buyOrder = orderMapper.findByIdForUpdate(event.buyOrderId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        OrderPair orderPair = lockOrders(event.buyOrderId(), event.sellOrderId());
+        Order buyOrder = orderPair.buyOrder();
+        Order sellOrder = orderPair.sellOrder();
 
-        Order sellOrder = orderMapper.findByIdForUpdate(event.sellOrderId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        if (!isExecutableOrder(buyOrder) || !isExecutableOrder(sellOrder)) {
+            return;
+        }
+
+        long executableQuantity = Math.min(
+                event.quantity(),
+                Math.min(buyOrder.getRemainingQuantity(), sellOrder.getRemainingQuantity())
+        );
+
+        if (executableQuantity <= 0) {
+            return;
+        }
 
         Trade trade = Trade.builder()
                 .productId(event.productId())
@@ -55,16 +67,39 @@ public class TradeSettlementService {
                 .buyerMemberId(buyOrder.getMemberId())
                 .sellerMemberId(sellOrder.getMemberId())
                 .price(event.price())
-                .quantity(event.quantity())
+                .quantity(executableQuantity)
                 .build();
 
         tradeMapper.insert(trade);
 
-        updateOrderAfterTrade(buyOrder, event.quantity());
-        updateOrderAfterTrade(sellOrder, event.quantity());
+        updateOrderAfterTrade(buyOrder, executableQuantity);
+        updateOrderAfterTrade(sellOrder, executableQuantity);
 
-        settleBuyer(buyOrder, event, trade);
-        settleSeller(sellOrder, event, trade);
+        settleBuyer(buyOrder, event.price(), executableQuantity, trade);
+        settleSeller(sellOrder, event.price(), executableQuantity, trade);
+    }
+
+    private OrderPair lockOrders(Long buyOrderId, Long sellOrderId) {
+        if (buyOrderId < sellOrderId) {
+            Order buyOrder = findOrderForUpdate(buyOrderId);
+            Order sellOrder = findOrderForUpdate(sellOrderId);
+            return new OrderPair(buyOrder, sellOrder);
+        }
+
+        Order sellOrder = findOrderForUpdate(sellOrderId);
+        Order buyOrder = findOrderForUpdate(buyOrderId);
+        return new OrderPair(buyOrder, sellOrder);
+    }
+
+    private Order findOrderForUpdate(Long orderId) {
+        return orderMapper.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+    }
+
+    private boolean isExecutableOrder(Order order) {
+        return (OPEN.equals(order.getStatus()) || PARTIALLY_FILLED.equals(order.getStatus()))
+                && order.getRemainingQuantity() != null
+                && order.getRemainingQuantity() > 0;
     }
 
     private void updateOrderAfterTrade(Order order, Long tradedQuantity) {
@@ -81,15 +116,15 @@ public class TradeSettlementService {
         orderMapper.updateRemainingQuantityAndStatus(updatedOrder);
     }
 
-    private void settleBuyer(Order buyOrder, TradeExecutedEvent event, Trade trade) {
+    private void settleBuyer(Order buyOrder, BigDecimal tradePrice, long quantity, Trade trade) {
         Wallet buyerWallet = walletMapper.findByMemberIdForUpdate(buyOrder.getMemberId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.WALLET_NOT_FOUND));
 
         BigDecimal lockedAmount = buyOrder.getPrice()
-                .multiply(BigDecimal.valueOf(event.quantity()));
+                .multiply(BigDecimal.valueOf(quantity));
 
-        BigDecimal actualTradeAmount = event.price()
-                .multiply(BigDecimal.valueOf(event.quantity()));
+        BigDecimal actualTradeAmount = tradePrice
+                .multiply(BigDecimal.valueOf(quantity));
 
         BigDecimal refundAmount = lockedAmount.subtract(actualTradeAmount);
 
@@ -117,15 +152,15 @@ public class TradeSettlementService {
 
         walletTransactionMapper.insert(walletTransaction);
 
-        increaseBuyerHolding(buyOrder, event);
+        increaseBuyerHolding(buyOrder, tradePrice, quantity);
     }
 
-    private void settleSeller(Order sellOrder, TradeExecutedEvent event, Trade trade) {
+    private void settleSeller(Order sellOrder, BigDecimal tradePrice, long quantity, Trade trade) {
         Wallet sellerWallet = walletMapper.findByMemberIdForUpdate(sellOrder.getMemberId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.WALLET_NOT_FOUND));
 
-        BigDecimal tradeAmount = event.price()
-                .multiply(BigDecimal.valueOf(event.quantity()));
+        BigDecimal tradeAmount = tradePrice
+                .multiply(BigDecimal.valueOf(quantity));
 
         BigDecimal updatedAvailableBalance = sellerWallet.getAvailableBalance().add(tradeAmount);
 
@@ -150,21 +185,21 @@ public class TradeSettlementService {
 
         walletTransactionMapper.insert(walletTransaction);
 
-        decreaseSellerHolding(sellOrder, event);
+        decreaseSellerHolding(sellOrder, quantity);
     }
 
-    private void increaseBuyerHolding(Order buyOrder, TradeExecutedEvent event) {
+    private void increaseBuyerHolding(Order buyOrder, BigDecimal tradePrice, long quantity) {
         Holding holding = holdingMapper
-                .findByMemberIdAndProductIdForUpdate(buyOrder.getMemberId(), event.productId())
+                .findByMemberIdAndProductIdForUpdate(buyOrder.getMemberId(), buyOrder.getProductId())
                 .orElse(null);
 
         if (holding == null) {
             Holding newHolding = Holding.builder()
                     .memberId(buyOrder.getMemberId())
-                    .productId(event.productId())
-                    .quantity(event.quantity())
+                    .productId(buyOrder.getProductId())
+                    .quantity(quantity)
                     .lockedQuantity(0L)
-                    .averagePrice(event.price())
+                    .averagePrice(tradePrice)
                     .build();
 
             holdingMapper.insert(newHolding);
@@ -174,10 +209,10 @@ public class TradeSettlementService {
         BigDecimal oldTotalAmount = holding.getAveragePrice()
                 .multiply(BigDecimal.valueOf(holding.getQuantity()));
 
-        BigDecimal newTradeAmount = event.price()
-                .multiply(BigDecimal.valueOf(event.quantity()));
+        BigDecimal newTradeAmount = tradePrice
+                .multiply(BigDecimal.valueOf(quantity));
 
-        long updatedQuantity = holding.getQuantity() + event.quantity();
+        long updatedQuantity = holding.getQuantity() + quantity;
 
         BigDecimal updatedAveragePrice = oldTotalAmount
                 .add(newTradeAmount)
@@ -193,18 +228,21 @@ public class TradeSettlementService {
         holdingMapper.update(updatedHolding);
     }
 
-    private void decreaseSellerHolding(Order sellOrder, TradeExecutedEvent event) {
+    private void decreaseSellerHolding(Order sellOrder, long quantity) {
         Holding holding = holdingMapper
-                .findByMemberIdAndProductIdForUpdate(sellOrder.getMemberId(), event.productId())
+                .findByMemberIdAndProductIdForUpdate(sellOrder.getMemberId(), sellOrder.getProductId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.HOLDING_NOT_FOUND));
 
         Holding updatedHolding = Holding.builder()
                 .id(holding.getId())
-                .quantity(holding.getQuantity() - event.quantity())
-                .lockedQuantity(holding.getLockedQuantity() - event.quantity())
+                .quantity(holding.getQuantity() - quantity)
+                .lockedQuantity(holding.getLockedQuantity() - quantity)
                 .averagePrice(holding.getAveragePrice())
                 .build();
 
         holdingMapper.update(updatedHolding);
+    }
+
+    private record OrderPair(Order buyOrder, Order sellOrder) {
     }
 }
