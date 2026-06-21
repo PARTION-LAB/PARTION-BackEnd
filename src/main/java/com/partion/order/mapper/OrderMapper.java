@@ -30,4 +30,6 @@ public interface OrderMapper {
     Optional<Order> findByIdForUpdate(@Param("id") Long id);
 
     void updateStatus(Order order);
+
+    void updateRemainingQuantityAndStatus(Order order);
 }
