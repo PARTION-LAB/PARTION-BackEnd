@@ -27,4 +27,19 @@
         )
     </insert>
 
+    <select id="findRecentTrades" resultType="com.partion.trade.dto.RecentTradeResponse">
+        SELECT
+        t.id AS trade_id,
+        t.product_id,
+        p.name AS symbol,
+        t.price,
+        t.quantity,
+        t.traded_at
+        FROM trades t
+        JOIN products p ON t.product_id = p.id
+        WHERE t.product_id = #{productId}
+        ORDER BY t.traded_at DESC, t.id DESC
+        LIMIT #{limit}
+    </select>
+
 </mapper>

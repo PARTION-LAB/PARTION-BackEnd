@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/investments/products").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/investments/products/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/trading/products").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/trading/products/*/trades").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

@@ -5,6 +5,8 @@ import com.partion.global.exception.ErrorCode;
 import com.partion.global.response.PageResponse;
 import com.partion.product.dto.ProductListResponse;
 import com.partion.product.mapper.ProductMapper;
+import com.partion.trade.dto.RecentTradeResponse;
+import com.partion.trade.mapper.TradeMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ public class TradingService {
     private static final String TRADING_STATUS = "TRADING";
 
     private final ProductMapper productMapper;
+    private final TradeMapper tradeMapper;
 
     public PageResponse<ProductListResponse> getTradingProducts(
             String category,
@@ -43,6 +46,17 @@ public class TradingService {
 
     private void validatePageRequest(int page, int size) {
         if (page < 0 || size <= 0 || size > 100) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+    }
+
+    public List<RecentTradeResponse> getRecentTrades(Long productId, int size) {
+        validateRecentTradeSize(size);
+        return tradeMapper.findRecentTrades(productId, size);
+    }
+
+    private void validateRecentTradeSize(int size) {
+        if (size <= 0 || size > 100) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
     }
