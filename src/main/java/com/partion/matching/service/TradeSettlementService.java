@@ -10,6 +10,7 @@ import com.partion.portfolio.domain.Holding;
 import com.partion.portfolio.mapper.HoldingMapper;
 import com.partion.trade.domain.Trade;
 import com.partion.trade.mapper.TradeMapper;
+import com.partion.trade.service.CurrentPriceCacheService;
 import com.partion.wallet.domain.Wallet;
 import com.partion.wallet.domain.WalletTransaction;
 import com.partion.wallet.mapper.WalletMapper;
@@ -18,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -36,6 +39,7 @@ public class TradeSettlementService {
     private final WalletMapper walletMapper;
     private final WalletTransactionMapper walletTransactionMapper;
     private final HoldingMapper holdingMapper;
+    private final CurrentPriceCacheService currentPriceCacheService;
 
     @KafkaListener(
             topics = KafkaTopicConfig.TRADE_EVENTS,
@@ -77,6 +81,17 @@ public class TradeSettlementService {
 
         settleBuyer(buyOrder, event.price(), executableQuantity, trade);
         settleSeller(sellOrder, event.price(), executableQuantity, trade);
+
+        saveCurrentPriceAfterCommit(trade.getProductId(), trade.getPrice());
+    }
+
+    private void saveCurrentPriceAfterCommit(Long productId, BigDecimal price) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                currentPriceCacheService.saveCurrentPrice(productId, price);
+            }
+        });
     }
 
     private OrderPair lockOrders(Long buyOrderId, Long sellOrderId) {
