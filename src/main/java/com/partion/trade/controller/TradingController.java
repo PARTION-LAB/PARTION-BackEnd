@@ -2,6 +2,7 @@ package com.partion.trade.controller;
 
 import com.partion.global.response.PageResponse;
 import com.partion.product.dto.ProductListResponse;
+import com.partion.trade.dto.OrderBookResponse;
 import com.partion.trade.dto.RecentTradeResponse;
 import com.partion.trade.service.TradingService;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,15 @@ public class TradingController {
         List<RecentTradeResponse> response =
                 tradingService.getRecentTrades(productId, size);
 
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/products/{productId}/orderbook")
+    public ResponseEntity<OrderBookResponse> getOrderBook(
+            @PathVariable Long productId,
+            @RequestParam(defaultValue = "10") int depth
+    ) {
+        OrderBookResponse response = tradingService.getOrderBook(productId, depth);
         return ResponseEntity.ok(response);
     }
 }

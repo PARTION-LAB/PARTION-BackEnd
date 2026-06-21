@@ -102,4 +102,26 @@
         WHERE id = #{id}
     </update>
 
+    <select id="findOrderBookLevels" resultType="com.partion.trade.dto.OrderBookLevelResponse">
+        SELECT
+        price,
+        SUM(remaining_quantity) AS quantity,
+        COUNT(*) AS orders
+        FROM orders
+        WHERE product_id = #{productId}
+        AND type = #{type}
+        AND status IN ('OPEN', 'PARTIALLY_FILLED')
+        AND remaining_quantity > 0
+        GROUP BY price
+        <choose>
+            <when test="type == 'SELL'">
+                ORDER BY price ASC
+            </when>
+            <otherwise>
+                ORDER BY price DESC
+            </otherwise>
+        </choose>
+        LIMIT #{limit}
+    </select>
+
 </mapper>
