@@ -222,6 +222,7 @@ CREATE TABLE ledger_blocks (
                                id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                block_number BIGINT NOT NULL UNIQUE,
                                previous_hash VARCHAR(255),
+                               merkle_root VARCHAR(255),
                                current_hash VARCHAR(255) NOT NULL,
                                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -229,6 +230,8 @@ CREATE TABLE ledger_blocks (
 CREATE TABLE ledger_events (
                                id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                block_id BIGINT NOT NULL,
+                               transaction_hash VARCHAR(255) NOT NULL UNIQUE,
+                               payload_hash VARCHAR(255) NOT NULL,
                                event_type VARCHAR(50) NOT NULL,
                                reference_type VARCHAR(50),
                                reference_id BIGINT,
@@ -258,3 +261,6 @@ CREATE INDEX idx_wallet_transactions_wallet ON wallet_transactions(wallet_id);
 CREATE INDEX idx_boards_category ON boards(category);
 CREATE INDEX idx_comments_board ON comments(board_id);
 CREATE INDEX idx_investments_product_status ON investments(product_id, status);
+
+CREATE INDEX idx_ledger_events_reference ON ledger_events(reference_type, reference_id);
+CREATE INDEX idx_ledger_events_type_time ON ledger_events(event_type, created_at);
