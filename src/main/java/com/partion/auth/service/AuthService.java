@@ -28,7 +28,6 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final StringRedisTemplate stringRedisTemplate;
     private final EmailVerificationService emailVerificationService;
-    private final OAuthClientService oAuthClientService;
 
     public SignupResponse signup(SignupRequest request) {
         if(memberMapper.existsByEmail(request.getEmail())) {
@@ -174,46 +173,17 @@ public class AuthService {
         return new PasswordResetResponse(member.getEmail());
     }
 
-    public TokenIssueResult oauthLogin(OAuthLoginRequest request) {
-        OAuthUserInfo userInfo =
-                oAuthClientService.getUserInfo(request.getProvider(), request.getAccessToken());
-
-        Member member = memberMapper.findByProviderAndProviderId(
-                userInfo.getProvider(),
-                userInfo.getProviderId()
-        ).orElseGet(() -> createOAuthMember(request, userInfo));
-
-        String accessToken = jwtTokenProvider.createAccessToken(member);
-        String refreshToken = jwtTokenProvider.createRefreshToken(member);
-
-        stringRedisTemplate.opsForValue().set(
-                "refresh:" + member.getId(),
-                refreshToken,
-                Duration.ofMillis(jwtTokenProvider.getRefreshTokenExpirationMillis())
-        );
-
-        return new TokenIssueResult(
-                accessToken,
-                refreshToken,
-                "Bearer",
-                jwtTokenProvider.getAccessTokenExpirationSeconds(),
-                jwtTokenProvider.getRefreshTokenExpirationMillis() / 1000
-        );
-    }
-
-    private Member createOAuthMember(OAuthLoginRequest request, OAuthUserInfo userInfo) {
+    private Member createOAuthMember(OAuthUserInfo userInfo) {
         if (memberMapper.existsByEmail(userInfo.getEmail())) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
 
-        if (memberMapper.existsByNickname(request.getNickname())) {
-            throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
-        }
+        String nickname = createOAuthNickname(userInfo);
 
         Member member = Member.builder()
                 .email(userInfo.getEmail())
                 .password(null)
-                .nickname(request.getNickname())
+                .nickname(nickname)
                 .provider(userInfo.getProvider())
                 .providerId(userInfo.getProviderId())
                 .role("USER")
@@ -230,5 +200,58 @@ public class AuthService {
         walletMapper.insert(wallet);
 
         return member;
+    }
+
+    private String createOAuthNickname(OAuthUserInfo userInfo) {
+        String base = userInfo.getNickname();
+
+        if (base == null || base.isBlank()) {
+            base = userInfo.getProvider().toLowerCase() + "_" + userInfo.getProviderId();
+        }
+
+        base = base.replaceAll("[^가-힣a-zA-Z0-9_]", "");
+
+        if (base.length() > 20) {
+            base = base.substring(0, 20);
+        }
+
+        String nickname = base;
+        int suffix = 1;
+
+        while (memberMapper.existsByNickname(nickname)) {
+            String nextSuffix = String.valueOf(suffix++);
+            int maxBaseLength = Math.max(1, 20 - nextSuffix.length());
+            nickname = base.substring(0, Math.min(base.length(), maxBaseLength)) + nextSuffix;
+        }
+
+        return nickname;
+    }
+
+    public TokenIssueResult oauthLogin(OAuthUserInfo userInfo) {
+        Member member = memberMapper.findByProviderAndProviderId(
+                userInfo.getProvider(),
+                userInfo.getProviderId()
+        ).orElseGet(() -> createOAuthMember(userInfo));
+
+        return issueTokens(member);
+    }
+
+    private TokenIssueResult issueTokens(Member member) {
+        String accessToken = jwtTokenProvider.createAccessToken(member);
+        String refreshToken = jwtTokenProvider.createRefreshToken(member);
+
+        stringRedisTemplate.opsForValue().set(
+                "refresh:" + member.getId(),
+                refreshToken,
+                Duration.ofMillis(jwtTokenProvider.getRefreshTokenExpirationMillis())
+        );
+
+        return new TokenIssueResult(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                jwtTokenProvider.getAccessTokenExpirationSeconds(),
+                jwtTokenProvider.getRefreshTokenExpirationMillis() / 1000
+        );
     }
 }

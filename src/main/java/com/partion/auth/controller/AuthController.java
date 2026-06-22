@@ -2,6 +2,7 @@ package com.partion.auth.controller;
 
 import com.partion.auth.dto.*;
 import com.partion.auth.service.AuthService;
+import com.partion.auth.service.OAuthService;
 import com.partion.global.exception.BusinessException;
 import com.partion.global.exception.ErrorCode;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ import java.time.Duration;
 public class AuthController {
 
     private final AuthService authService;
+    private final OAuthService oAuthService;
 
     @PostMapping("/signup")
     public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
@@ -71,20 +73,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/oauth/login")
-    public ResponseEntity<TokenResponse> oauthLogin(
-            @Valid @RequestBody OAuthLoginRequest request
-    ) {
-        TokenIssueResult result = authService.oauthLogin(request);
-
-        ResponseCookie refreshCookie =
-                createRefreshTokenCookie(result.getRefreshToken(), result.getRefreshTokenMaxAge());
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(result.toResponse());
-    }
-
     private ResponseCookie createRefreshTokenCookie(String refreshToken, long maxAgeSeconds) {
         return ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
@@ -103,5 +91,27 @@ public class AuthController {
                 .maxAge(0)
                 .sameSite("Lax")
                 .build();
+    }
+
+    @GetMapping("/oauth/{provider}/authorization-url")
+    public ResponseEntity<OAuthAuthorizationUrlResponse> createOAuthAuthorizationUrl(
+            @PathVariable String provider
+    ) {
+        return ResponseEntity.ok(oAuthService.createAuthorizationUrl(provider));
+    }
+
+    @PostMapping("/oauth/{provider}/login")
+    public ResponseEntity<TokenResponse> oauthCodeLogin(
+            @PathVariable String provider,
+            @Valid @RequestBody OAuthCodeLoginRequest request
+    ) {
+        TokenIssueResult result = oAuthService.login(provider, request);
+
+        ResponseCookie refreshCookie =
+                createRefreshTokenCookie(result.getRefreshToken(), result.getRefreshTokenMaxAge());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(result.toResponse());
     }
 }
