@@ -3,6 +3,7 @@ package com.partion.auth.service;
 import com.partion.auth.dto.*;
 import com.partion.global.security.JwtTokenProvider;
 import com.partion.member.domain.Member;
+import com.partion.member.dto.MemberInfoResponse;
 import com.partion.member.mapper.MemberMapper;
 import com.partion.wallet.domain.Wallet;
 import com.partion.wallet.mapper.WalletMapper;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
@@ -81,26 +83,7 @@ public class AuthService {
             throw new BusinessException(ErrorCode.INVALID_LOGIN_REQUEST);
         }
 
-        String accessToken = jwtTokenProvider.createAccessToken(member);
-        String refreshToken = jwtTokenProvider.createRefreshToken(member);
-
-        // Redis에 Refresh Token 저장
-        // key -> refresh: {memberId}
-        // value -> refreshToken 문자열
-        // TTL -> jwt.refresh-token-expiration
-        stringRedisTemplate.opsForValue().set(
-                "refresh:" + member.getId(),
-                refreshToken,
-                Duration.ofMillis(jwtTokenProvider.getRefreshTokenExpirationMillis())
-        );
-
-        return new TokenIssueResult(
-                accessToken,
-                refreshToken,
-                "Bearer",
-                jwtTokenProvider.getAccessTokenExpirationSeconds(),
-                jwtTokenProvider.getRefreshTokenExpirationMillis() / 1000
-        );
+        return issueTokens(member);
     }
 
     public AccessTokenResponse reissue(String refreshToken) {
@@ -228,12 +211,27 @@ public class AuthService {
     }
 
     public TokenIssueResult oauthLogin(OAuthUserInfo userInfo) {
-        Member member = memberMapper.findByProviderAndProviderId(
-                userInfo.getProvider(),
-                userInfo.getProviderId()
-        ).orElseGet(() -> createOAuthMember(userInfo));
+        Member member = findExistingOAuthMember(userInfo)
+                .orElseGet(() -> createOAuthMember(userInfo));
 
         return issueTokens(member);
+    }
+
+    private Optional<Member> findExistingOAuthMember(OAuthUserInfo userInfo) {
+        Optional<Member> member = memberMapper.findByProviderAndProviderId(
+                userInfo.getProvider(),
+                userInfo.getProviderId()
+        );
+
+        if (member.isPresent()) {
+            return member;
+        }
+
+        if (userInfo.getEmail() == null || userInfo.getEmail().isBlank()) {
+            return Optional.empty();
+        }
+
+        return memberMapper.findByEmail(userInfo.getEmail());
     }
 
     private TokenIssueResult issueTokens(Member member) {
@@ -251,7 +249,8 @@ public class AuthService {
                 refreshToken,
                 "Bearer",
                 jwtTokenProvider.getAccessTokenExpirationSeconds(),
-                jwtTokenProvider.getRefreshTokenExpirationMillis() / 1000
+                jwtTokenProvider.getRefreshTokenExpirationMillis() / 1000,
+                new MemberInfoResponse(member)
         );
     }
 }
