@@ -146,7 +146,94 @@ public class TradeSettlementService {
     }
 
     private void handleOrderExecutionResult(OrderExecutionResultEvent event) {
+        Order order = orderMapper.findByIdForUpdate(event.orderId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
+        if (!"MARKET".equals(order.getOrderMethod())) {
+            return;
+        }
+
+        if (!isExecutableOrder(order)) {
+            return;
+        }
+
+        long cancelQuantity = Math.max(0, order.getRemainingQuantity());
+
+        if (cancelQuantity > 0) {
+            if ("BUY".equals(order.getType())) {
+                unlockBuyRemainder(order, cancelQuantity);
+            } else if ("SELL".equals(order.getType())) {
+                unlockSellRemainder(order, cancelQuantity);
+            }
+        }
+
+        Order updatedOrder = Order.builder()
+                .id(order.getId())
+                .remainingQuantity(0L)
+                .status(validateFinalStatus(event.finalStatus()))
+                .build();
+
+        orderMapper.updateRemainingQuantityAndStatus(updatedOrder);
+    }
+
+    private String validateFinalStatus(String status) {
+        if (FILLED.equals(status) || PARTIALLY_FILLED.equals(status) || "CANCELED".equals(status)) {
+            return status;
+        }
+
+        throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+    }
+
+    private void unlockBuyRemainder(Order order, long cancelQuantity) {
+        Wallet wallet = walletMapper.findByMemberIdForUpdate(order.getMemberId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.WALLET_NOT_FOUND));
+
+        BigDecimal unlockAmount = order.getPrice()
+                .multiply(BigDecimal.valueOf(cancelQuantity));
+
+        BigDecimal updatedAvailableBalance =
+                wallet.getAvailableBalance().add(unlockAmount);
+
+        BigDecimal updatedLockedBalance =
+                wallet.getLockedBalance().subtract(unlockAmount);
+
+        Wallet updatedWallet = Wallet.builder()
+                .id(wallet.getId())
+                .memberId(wallet.getMemberId())
+                .availableBalance(updatedAvailableBalance)
+                .lockedBalance(updatedLockedBalance)
+                .build();
+
+        walletMapper.updateBalance(updatedWallet);
+
+        WalletTransaction walletTransaction = WalletTransaction.builder()
+                .walletId(wallet.getId())
+                .type("ORDER_UNLOCK")
+                .amount(unlockAmount)
+                .availableBalanceAfter(updatedAvailableBalance)
+                .lockedBalanceAfter(updatedLockedBalance)
+                .referenceType("ORDER")
+                .referenceId(order.getId())
+                .build();
+
+        walletTransactionMapper.insert(walletTransaction);
+    }
+
+    private void unlockSellRemainder(Order order, long cancelQuantity) {
+        Holding holding = holdingMapper
+                .findByMemberIdAndProductIdForUpdate(order.getMemberId(), order.getProductId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.INSUFFICIENT_HOLDING_QUANTITY));
+
+        Holding updatedHolding = Holding.builder()
+                .id(holding.getId())
+                .memberId(holding.getMemberId())
+                .productId(holding.getProductId())
+                .quantity(holding.getQuantity())
+                .lockedQuantity(holding.getLockedQuantity() - cancelQuantity)
+                .averagePrice(holding.getAveragePrice())
+                .build();
+
+        holdingMapper.updateLockedQuantity(updatedHolding);
     }
 
     private void publishTradeSettledEvent(
