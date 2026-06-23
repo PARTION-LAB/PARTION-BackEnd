@@ -10,6 +10,7 @@ public record OrderCommandEvent(
         Long memberId,
         Long productId,
         String side,
+        String orderMethod,
         BigDecimal price,
         Long quantity
 ) {
@@ -21,6 +22,7 @@ public record OrderCommandEvent(
                 order.getMemberId(),
                 order.getProductId(),
                 order.getType(),
+                order.getOrderMethod(),
                 order.getPrice(),
                 order.getQuantity()
         );
@@ -33,6 +35,7 @@ public record OrderCommandEvent(
                 order.getMemberId(),
                 order.getProductId(),
                 order.getType(),
+                order.getOrderMethod(),
                 order.getPrice(),
                 order.getRemainingQuantity()
         );

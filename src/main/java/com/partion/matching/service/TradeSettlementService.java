@@ -1,5 +1,9 @@
 package com.partion.matching.service;
 
+import com.partion.matching.event.OrderExecutionResultEvent;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import com.partion.global.exception.BusinessException;
 import com.partion.global.exception.ErrorCode;
 import com.partion.ledger.event.LedgerEvent;
@@ -28,6 +32,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
@@ -45,14 +50,10 @@ public class TradeSettlementService {
     private final HoldingMapper holdingMapper;
     private final CurrentPriceCacheService currentPriceCacheService;
     private final ProductMapper productMapper;
+    private final ObjectMapper objectMapper;
     private final LedgerEventPublisher ledgerEventPublisher;
 
-    @KafkaListener(
-            topics = KafkaTopicConfig.TRADE_EVENTS,
-            groupId = "partion-settlement"
-    )
-    @Transactional
-    public void handleTradeExecuted(TradeExecutedEvent event) {
+    private void handleTradeExecuted(TradeExecutedEvent event) {
         OrderPair orderPair = lockOrders(event.buyOrderId(), event.sellOrderId());
         Order buyOrder = orderPair.buyOrder();
         Order sellOrder = orderPair.sellOrder();
@@ -91,6 +92,61 @@ public class TradeSettlementService {
         saveCurrentPriceAfterCommit(trade.getProductId(), trade.getPrice());
 
         publishTradeSettledEvent(event, trade, buyOrder, sellOrder, executableQuantity);
+    }
+
+    @KafkaListener(
+            topics = KafkaTopicConfig.TRADE_EVENTS,
+            groupId = "partion-settlement"
+    )
+    @Transactional
+    public void handleMatchingEvent(String payload) {
+        String eventType = resolveEventType(payload);
+
+        if ("ORDER_EXECUTION_RESULT".equals(eventType)) {
+            OrderExecutionResultEvent event =
+                    readPayload(payload, OrderExecutionResultEvent.class);
+            handleOrderExecutionResult(event);
+            return;
+        }
+
+        TradeExecutedEvent event =
+                readPayload(payload, TradeExecutedEvent.class);
+        handleTradeExecuted(event);
+    }
+
+    private String resolveEventType(String payload) {
+        Map<String, Object> values = readPayload(
+                payload,
+                new TypeReference<Map<String, Object>>() {}
+        );
+
+        Object eventType = values.get("eventType");
+
+        if (eventType == null) {
+            return "TRADE_EXECUTED";
+        }
+
+        return String.valueOf(eventType);
+    }
+
+    private <T> T readPayload(String payload, TypeReference<T> typeReference) {
+        try {
+            return objectMapper.readValue(payload, typeReference);
+        } catch (JacksonException exception) {
+            throw new IllegalArgumentException("Invalid matching event payload.", exception);
+        }
+    }
+
+    private <T> T readPayload(String payload, Class<T> type) {
+        try {
+            return objectMapper.readValue(payload, type);
+        } catch (JacksonException exception) {
+            throw new IllegalArgumentException("Invalid matching event payload.", exception);
+        }
+    }
+
+    private void handleOrderExecutionResult(OrderExecutionResultEvent event) {
+
     }
 
     private void publishTradeSettledEvent(
