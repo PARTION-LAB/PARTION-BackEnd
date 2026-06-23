@@ -1,6 +1,5 @@
 package com.partion.matching.config;
 
-import com.partion.matching.event.TradeExecutedEvent;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -13,7 +12,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
-import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 
 import java.util.HashMap;
@@ -59,32 +57,28 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ConsumerFactory<String, TradeExecutedEvent> tradeEventConsumerFactory() {
+    public ConsumerFactory<String, String> matchingEventConsumerFactory() {
         Map<String, Object> configs = new HashMap<>();
         configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configs.put(ConsumerConfig.GROUP_ID_CONFIG, "partion-settlement");
         configs.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        configs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
+        configs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         configs.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-
-        JacksonJsonDeserializer<TradeExecutedEvent> valueDeserializer =
-                new JacksonJsonDeserializer<>(TradeExecutedEvent.class, false);
-        valueDeserializer.addTrustedPackages("com.partion.matching.event");
 
         return new DefaultKafkaConsumerFactory<>(
                 configs,
                 new StringDeserializer(),
-                valueDeserializer
+                new StringDeserializer()
         );
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, TradeExecutedEvent> kafkaListenerContainerFactory(
-            ConsumerFactory<String, TradeExecutedEvent> tradeEventConsumerFactory
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
+            ConsumerFactory<String, String> matchingEventConsumerFactory
     ) {
-        ConcurrentKafkaListenerContainerFactory<String, TradeExecutedEvent> factory =
+        ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(tradeEventConsumerFactory);
+        factory.setConsumerFactory(matchingEventConsumerFactory);
         return factory;
     }
 }
