@@ -33,6 +33,7 @@ public class OrderService {
     private static final String BUY = "BUY";
     private static final String SELL = "SELL";
     private static final String LIMIT = "LIMIT";
+    private static final String MARKET = "MARKET";
     private static final String OPEN = "OPEN";
     private static final String PARTIALLY_FILLED = "PARTIALLY_FILLED";
     private static final String CANCELED = "CANCELED";
@@ -86,7 +87,7 @@ public class OrderService {
             throw new BusinessException(ErrorCode.INVALID_ORDER_TYPE);
         }
 
-        if (!LIMIT.equals(request.getOrderMethod())) {
+        if (!LIMIT.equals(request.getOrderMethod()) && !MARKET.equals(request.getOrderMethod())) {
             throw new BusinessException(ErrorCode.INVALID_ORDER_METHOD);
         }
 
