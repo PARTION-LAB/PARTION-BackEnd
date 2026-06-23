@@ -124,4 +124,23 @@
         LIMIT #{limit}
     </select>
 
+    <select id="findActiveOrdersForResync" resultType="com.partion.order.domain.Order">
+        SELECT
+        id,
+        member_id,
+        product_id,
+        type,
+        order_method,
+        price,
+        quantity,
+        remaining_quantity,
+        status,
+        created_at,
+        updated_at
+        FROM orders
+        WHERE status IN ('OPEN', 'PARTIALLY_FILLED')
+        AND remaining_quantity > 0
+        ORDER BY product_id ASC, created_at ASC, id ASC
+    </select>
+
 </mapper>
