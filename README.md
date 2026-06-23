@@ -216,7 +216,8 @@ flowchart LR
 | `member` | 회원 정보 조회, 수정, 비밀번호 변경 |
 | `wallet` | 지갑 조회, 예치금 변동 내역 조회 |
 | `payment` | Toss Payments 결제 요청 및 승인 처리 |
-| `product` | STO 상품 등록, 조회, 이미지 업로드 URL 발급 |
+| `product` | 상품 등록, 상품 목록/상세 조회, 모집/거래 가능 상품 조회 |
+| `upload` | S3 Presigned URL 발급 |
 | `investment` | 모집 상품 투자, 투자 내역 조회 |
 | `order` | 주문 생성, 주문 취소, 주문 내역 조회 |
 | `trade` | 체결 내역, 최근 체결 조회 |
@@ -347,7 +348,7 @@ sequenceDiagram
         BE->>DB: 주문 상태 갱신
         BE->>DB: 지갑 정산
         BE->>DB: 보유 자산 정산
-        BE->>Redis: 현재가 및 최근 체결 캐시 갱신
+        BE->>Redis: 현재가 캐시 갱신
     end
 ```
 
@@ -453,8 +454,7 @@ Redis는 빠르게 조회하거나 만료 시간이 필요한 데이터를 저�
 | --- | --- |
 | `refresh:{memberId}` | 회원 Refresh Token 저장 |
 | `blacklist:{accessToken}` | 로그아웃된 Access Token Blacklist |
-| `price:product:{productId}` | 상품 현재가 캐시 |
-| `recent-trades:product:{productId}` | 상품 최근 체결 캐시 |
+| `product:{productId}:current-price` | 상품 현재가 캐시 |
 
 ### Refresh Token
 
@@ -484,8 +484,9 @@ Backend와 Matching Engine은 Kafka를 통해 비동기 방식으로 통신합�
 
 | Topic | Direction | Description |
 | --- | --- | --- |
-| `partion.order.commands` | Backend → Matching Engine | 주문 생성 및 주문 취소 명령 |
+| `partion.order.commands` | Backend → Matching Engine | 주문 생성, 주문 취소, 주문 재동기화 명령 |
 | `partion.trade.events` | Matching Engine → Backend | 체결 이벤트 |
+| `partion.ledger.events` | Backend → Blockchain Server | 투자/체결 등 원장 기록 이벤트 |
 
 ### 주문 생성 메시지
 
@@ -496,6 +497,7 @@ Backend와 Matching Engine은 Kafka를 통해 비동기 방식으로 통신합�
   "memberId": 10,
   "productId": 3,
   "side": "BUY",
+  "orderMethod": "LIMIT",
   "price": 10000,
   "quantity": 5
 }
@@ -510,6 +512,7 @@ Backend와 Matching Engine은 Kafka를 통해 비동기 방식으로 통신합�
   "memberId": 10,
   "productId": 3,
   "side": "BUY",
+  "orderMethod": "LIMIT",
   "price": 10000,
   "quantity": 5
 }
@@ -668,14 +671,18 @@ http://localhost:8080/swagger-ui/index.html
 - Product API
 - Wallet API
 - Payment API
+- Upload API
 - Investment API
 - Order API
 - Trade API
+- Trading API
 - Portfolio API
 - Board API
 - Comment API
-- AI API
+- AI Chat API
 - Ledger API
+- Matching Admin API
+- Health Check API
 
 ---
 
@@ -711,16 +718,6 @@ spring.batch.jdbc.initialize-schema=never
 ```
 
 Batch 메타 테이블은 운영 DB에 사전에 생성되어 있어야 합니다.
-
-### Health Check
-
-ECS와 ALB 배포 환경에서는 안정적인 상태 확인을 위해 별도의 Health Check API를 두는 것이 좋습니다.
-
-예시:
-
-```text
-GET /health
-```
 
 ---
 
