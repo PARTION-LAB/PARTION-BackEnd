@@ -39,4 +39,6 @@ public interface OrderMapper {
             @Param("type") String type,
             @Param("limit") int limit
     );
+
+    List<Order> findActiveOrdersForResync();
 }

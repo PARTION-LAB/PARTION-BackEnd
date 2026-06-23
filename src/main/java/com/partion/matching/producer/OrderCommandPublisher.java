@@ -47,6 +47,11 @@ public class OrderCommandPublisher {
         publish(event);
     }
 
+    public void publishResync(Order order) {
+        OrderCommandEvent event = OrderCommandEvent.resync(order);
+        publish(event);
+    }
+
     private void publish(OrderCommandEvent event) {
         kafkaTemplate.send(
                 KafkaTopicConfig.ORDER_COMMANDS,

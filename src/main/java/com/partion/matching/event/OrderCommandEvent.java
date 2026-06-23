@@ -40,4 +40,17 @@ public record OrderCommandEvent(
                 order.getRemainingQuantity()
         );
     }
+
+    public static OrderCommandEvent resync(Order order) {
+        return new OrderCommandEvent(
+                "NEW_ORDER",
+                order.getId(),
+                order.getMemberId(),
+                order.getProductId(),
+                order.getType(),
+                order.getOrderMethod(),
+                order.getPrice(),
+                order.getRemainingQuantity()
+        );
+    }
 }
