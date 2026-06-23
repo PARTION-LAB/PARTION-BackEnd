@@ -98,12 +98,15 @@ public class InvestmentService {
         long remainingTokenQuantity =
                 product.getTotalTokenQuantity() - product.getFundedTokenQuantity();
 
-        if (request.getQuantity() > remainingTokenQuantity) {
-            throw new BusinessException(ErrorCode.PRODUCT_TOKEN_NOT_ENOUGH);
+        long requestedQuantity = request.getQuantity();
+        long investQuantity = Math.min(requestedQuantity, remainingTokenQuantity);
+
+        if (investQuantity <= 0) {
+            return InvestmentCreateResponse.notInvested(product, requestedQuantity);
         }
 
         BigDecimal totalAmount = product.getTokenPrice()
-                .multiply(BigDecimal.valueOf(request.getQuantity()));
+                .multiply(BigDecimal.valueOf(investQuantity));
 
         Wallet wallet = walletMapper.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WALLET_NOT_FOUND));
@@ -115,7 +118,7 @@ public class InvestmentService {
         Investment investment = Investment.builder()
                 .memberId(memberId)
                 .productId(product.getId())
-                .quantity(request.getQuantity())
+                .quantity(investQuantity)
                 .pricePerToken(product.getTokenPrice())
                 .totalAmount(totalAmount)
                 .build();
@@ -147,7 +150,7 @@ public class InvestmentService {
         walletTransactionMapper.insert(walletTransaction);
 
         long updatedFundedTokenQuantity =
-                product.getFundedTokenQuantity() + request.getQuantity();
+                product.getFundedTokenQuantity() + investQuantity;
 
         BigDecimal updatedCurrentAmount =
                 product.getCurrentAmount().add(totalAmount);
@@ -165,9 +168,9 @@ public class InvestmentService {
 
         productMapper.updateFunding(updatedProduct);
 
-        upsertHolding(memberId, product.getId(), request.getQuantity(), product.getTokenPrice());
+        upsertHolding(memberId, product.getId(), investQuantity, product.getTokenPrice());
 
-        return new InvestmentCreateResponse(investment);
+        return new InvestmentCreateResponse(investment, requestedQuantity);
     }
 
     private void upsertHolding(
