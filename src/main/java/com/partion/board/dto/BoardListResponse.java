@@ -10,6 +10,7 @@ public class BoardListResponse {
 
     private final Long boardId;
     private final Long memberId;
+    private final String writerNickname;
     private final String category;
     private final String title;
     private final LocalDateTime createdAt;
@@ -18,6 +19,7 @@ public class BoardListResponse {
     public BoardListResponse(Board board) {
         this.boardId = board.getId();
         this.memberId = board.getMemberId();
+        this.writerNickname = board.getWriterNickname();
         this.category = board.getCategory();
         this.title = board.getTitle();
         this.createdAt = board.getCreatedAt();

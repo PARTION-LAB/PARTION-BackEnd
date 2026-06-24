@@ -10,6 +10,7 @@ public class BoardDetailResponse {
 
     private final Long boardId;
     private final Long memberId;
+    private final String writerNickname;
     private final String category;
     private final String title;
     private final String content;
@@ -19,6 +20,7 @@ public class BoardDetailResponse {
     public BoardDetailResponse(Board board) {
         this.boardId = board.getId();
         this.memberId = board.getMemberId();
+        this.writerNickname = board.getWriterNickname();
         this.category = board.getCategory();
         this.title = board.getTitle();
         this.content = board.getContent();

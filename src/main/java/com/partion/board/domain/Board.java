@@ -11,6 +11,7 @@ public class Board {
 
     private Long id;
     private Long memberId;
+    private String writerNickname;
     private String category;
     private String title;
     private String content;
