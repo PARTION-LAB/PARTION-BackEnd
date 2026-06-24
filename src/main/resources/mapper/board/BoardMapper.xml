@@ -23,20 +23,22 @@
 
     <select id="findAll" resultType="com.partion.board.domain.Board">
         SELECT
-        id,
-        member_id,
-        category,
-        title,
-        content,
-        created_at,
-        updated_at
-        FROM boards
+        b.id,
+        b.member_id,
+        m.nickname AS writer_nickname,
+        b.category,
+        b.title,
+        b.content,
+        b.created_at,
+        b.updated_at
+        FROM boards b
+        LEFT JOIN members m ON m.id = b.member_id
         <where>
             <if test="category != null and category != ''">
-                AND category = #{category}
+                AND b.category = #{category}
             </if>
         </where>
-        ORDER BY created_at DESC, id DESC
+        ORDER BY b.created_at DESC, b.id DESC
         LIMIT #{limit}
         OFFSET #{offset}
     </select>
@@ -53,15 +55,17 @@
 
     <select id="findById" resultType="com.partion.board.domain.Board">
         SELECT
-        id,
-        member_id,
-        category,
-        title,
-        content,
-        created_at,
-        updated_at
-        FROM boards
-        WHERE id = #{id}
+        b.id,
+        b.member_id,
+        m.nickname AS writer_nickname,
+        b.category,
+        b.title,
+        b.content,
+        b.created_at,
+        b.updated_at
+        FROM boards b
+        LEFT JOIN members m ON m.id = b.member_id
+        WHERE b.id = #{id}
     </select>
 
     <update id="update" parameterType="com.partion.board.domain.Board">
