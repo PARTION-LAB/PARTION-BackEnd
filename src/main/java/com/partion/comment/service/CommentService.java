@@ -36,7 +36,10 @@ public class CommentService {
 
         commentMapper.insert(comment);
 
-        return new CommentCreateResponse(comment);
+        Comment savedComment = commentMapper.findById(comment.getId())
+                .orElse(comment);
+
+        return new CommentCreateResponse(savedComment);
     }
 
     @Transactional(readOnly = true)
