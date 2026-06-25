@@ -11,6 +11,7 @@ public class CommentListResponse {
     private final Long commentId;
     private final Long boardId;
     private final Long memberId;
+    private final String writerNickname;
     private final String content;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
@@ -19,6 +20,7 @@ public class CommentListResponse {
         this.commentId = comment.getId();
         this.boardId = comment.getBoardId();
         this.memberId = comment.getMemberId();
+        this.writerNickname = comment.getWriterNickname();
         this.content = comment.getContent();
         this.createdAt = comment.getCreatedAt();
         this.updatedAt = comment.getUpdatedAt();
