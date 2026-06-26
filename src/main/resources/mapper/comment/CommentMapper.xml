@@ -21,15 +21,17 @@
 
     <select id="findAllByBoardId" resultType="com.partion.comment.domain.Comment">
         SELECT
-        id,
-        board_id,
-        member_id,
-        content,
-        created_at,
-        updated_at
-        FROM comments
-        WHERE board_id = #{boardId}
-        ORDER BY created_at ASC, id ASC
+        c.id,
+        c.board_id,
+        c.member_id,
+        m.nickname AS writer_nickname,
+        c.content,
+        c.created_at,
+        c.updated_at
+        FROM comments c
+        LEFT JOIN members m ON m.id = c.member_id
+        WHERE c.board_id = #{boardId}
+        ORDER BY c.created_at ASC, c.id ASC
         LIMIT #{limit}
         OFFSET #{offset}
     </select>
@@ -42,14 +44,16 @@
 
     <select id="findById" resultType="com.partion.comment.domain.Comment">
         SELECT
-        id,
-        board_id,
-        member_id,
-        content,
-        created_at,
-        updated_at
-        FROM comments
-        WHERE id = #{id}
+        c.id,
+        c.board_id,
+        c.member_id,
+        m.nickname AS writer_nickname,
+        c.content,
+        c.created_at,
+        c.updated_at
+        FROM comments c
+        LEFT JOIN members m ON m.id = c.member_id
+        WHERE c.id = #{id}
     </select>
 
     <delete id="deleteById">
